@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Organizador de grupos</title>
+  <style>
+    :root {
+      --ink: #17324d;
+      --muted: #61758a;
+      --paper: #f8fbff;
+      --panel: rgba(255,255,255,.92);
+      --line: #d9e6ef;
+      --navy: #163a5f;
+      --blue: #2487c9;
+      --teal: #20a39e;
+      --yellow: #f5b942;
+      --red: #ed6a5a;
+      --purple: #7768ae;
+      --green: #57a773;
+      --orange: #ef8354;
+      --pink: #d65db1;
+      --cyan: #2d9cdb;
+      --lime: #7eac48;
+      --shadow: 0 18px 45px rgba(26, 67, 100, .15);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, ui-rounded, "Avenir Next", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 8% 8%, rgba(36,135,201,.16), transparent 30%),
+        radial-gradient(circle at 92% 92%, rgba(32,163,158,.15), transparent 34%),
+        linear-gradient(135deg, #f6fbff, #edf7f5);
+    }
+    button, textarea, select { font: inherit; }
+    .app { width: min(1420px, 100%); margin: 0 auto; padding: 26px; }
+    .hero {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 22px;
+    }
+    .brand { display: flex; align-items: center; gap: 15px; }
+    .brand-mark {
+      width: 58px; height: 58px; border-radius: 18px;
+      display: grid; place-items: center;
+      color: white; font-size: 29px;
+      background: linear-gradient(145deg, var(--blue), var(--teal));
+      box-shadow: 0 12px 25px rgba(36,135,201,.28);
+    }
+    h1 { margin: 0; font-size: clamp(1.65rem, 3vw, 2.55rem); letter-spacing: -.035em; }
+    .subtitle { margin: 4px 0 0; color: var(--muted); font-size: 1rem; }
+    .top-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+    .layout { display: grid; grid-template-columns: minmax(290px, 370px) 1fr; gap: 22px; align-items: start; }
+    .panel {
+      background: var(--panel);
+      border: 1px solid rgba(217,230,239,.95);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(8px);
+    }
+    .controls { padding: 22px; position: sticky; top: 18px; }
+    label { display: block; font-weight: 800; margin-bottom: 8px; }
+    .label-row { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+    .count { color: var(--blue); font-weight: 900; font-size: .9rem; }
+    textarea {
+      width: 100%; min-height: 280px; resize: vertical;
+      padding: 15px; border: 2px solid var(--line); border-radius: 15px;
+      color: var(--ink); background: #fff; line-height: 1.55;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    textarea:focus, select:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 4px rgba(36,135,201,.14); }
+    .hint { margin: 8px 0 20px; color: var(--muted); font-size: .84rem; line-height: 1.45; }
+    .group-control { display: grid; grid-template-columns: 1fr 105px; gap: 12px; align-items: end; }
+    select { width: 100%; padding: 12px; border: 2px solid var(--line); border-radius: 13px; background: #fff; color: var(--ink); font-weight: 800; }
+    .btn {
+      border: 0; border-radius: 14px; padding: 12px 16px;
+      cursor: pointer; font-weight: 900; color: var(--ink);
+      background: #eaf2f8; transition: transform .16s, box-shadow .16s, filter .16s;
+      min-height: 46px;
+    }
+    .btn:hover { transform: translateY(-2px); filter: brightness(1.02); }
+    .btn:active { transform: translateY(0); }
+    .btn:focus-visible { outline: 3px solid rgba(36,135,201,.35); outline-offset: 2px; }
+    .btn-primary {
+      width: 100%; margin-top: 16px; padding: 15px 18px; color: white;
+      background: linear-gradient(135deg, var(--blue), var(--teal));
+      box-shadow: 0 10px 22px rgba(36,135,201,.27); font-size: 1.03rem;
+    }
+    .error { min-height: 22px; margin-top: 10px; color: #b74438; font-weight: 700; font-size: .86rem; }
+    .results { padding: 22px; min-height: 570px; }
+    .results-head { display: flex; justify-content: space-between; align-items: center; gap: 18px; margin-bottom: 18px; }
+    .results-title { margin: 0; font-size: 1.3rem; }
+    .summary { color: var(--muted); margin-top: 3px; font-size: .91rem; }
+    .mini-actions { display: flex; gap: 9px; flex-wrap: wrap; justify-content: flex-end; }
+    .empty {
+      min-height: 470px; display: grid; place-items: center; text-align: center; padding: 35px;
+      border: 2px dashed var(--line); border-radius: 19px;
+      background: linear-gradient(145deg, rgba(36,135,201,.035), rgba(32,163,158,.045));
+    }
+    .empty-graphic { width: 150px; height: 120px; margin: 0 auto 18px; position: relative; }
+    .person { position: absolute; width: 43px; height: 54px; border-radius: 22px 22px 14px 14px; background: var(--blue); }
+    .person::before { content: ""; position: absolute; width: 27px; height: 27px; border-radius: 50%; background: inherit; left: 8px; top: -19px; box-shadow: 0 0 0 5px #fff; }
+    .p1 { left: 53px; top: 45px; background: var(--teal); z-index: 2; transform: scale(1.14); }
+    .p2 { left: 10px; top: 54px; background: var(--yellow); transform: rotate(-6deg); }
+    .p3 { right: 10px; top: 54px; background: var(--red); transform: rotate(6deg); }
+    .empty h2 { margin: 0 0 7px; font-size: 1.25rem; }
+    .empty p { margin: 0; color: var(--muted); max-width: 410px; line-height: 1.55; }
+    .groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 15px; }
+    .group-card {
+      --group-color: var(--blue);
+      overflow: hidden; background: #fff; border-radius: 18px;
+      border: 1px solid var(--line); box-shadow: 0 9px 22px rgba(28,61,88,.08);
+      animation: arrive .42s both cubic-bezier(.2,.8,.25,1);
+    }
+    .group-card:nth-child(2) { --group-color: var(--teal); }
+    .group-card:nth-child(3) { --group-color: var(--yellow); }
+    .group-card:nth-child(4) { --group-color: var(--red); }
+    .group-card:nth-child(5) { --group-color: var(--purple); }
+    .group-card:nth-child(6) { --group-color: var(--green); }
+    .group-card:nth-child(7) { --group-color: var(--orange); }
+    .group-card:nth-child(8) { --group-color: var(--pink); }
+    .group-card:nth-child(9) { --group-color: var(--cyan); }
+    .group-card:nth-child(10) { --group-color: var(--lime); }
+    .group-head { padding: 14px 16px; color: #fff; background: var(--group-color); display: flex; justify-content: space-between; align-items: center; }
+    .group-head h3 { margin: 0; font-size: 1rem; }
+    .group-size { background: rgba(255,255,255,.25); border-radius: 999px; padding: 3px 9px; font-size: .8rem; font-weight: 900; }
+    .names { list-style: none; margin: 0; padding: 9px 15px 13px; }
+    .names li { display: flex; gap: 10px; align-items: center; padding: 10px 2px; border-bottom: 1px solid #edf2f5; font-weight: 750; overflow-wrap: anywhere; }
+    .names li:last-child { border-bottom: 0; }
+    .number { width: 25px; height: 25px; flex: 0 0 25px; border-radius: 50%; display: grid; place-items: center; color: var(--group-color); background: #eef4f8; font-size: .76rem; font-weight: 900; }
+    .toast { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 25px); color: #fff; background: var(--navy); padding: 11px 17px; border-radius: 12px; opacity: 0; pointer-events: none; transition: .25s; box-shadow: var(--shadow); z-index: 10; }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+    @keyframes arrive { from { opacity: 0; transform: translateY(18px) scale(.98); } to { opacity: 1; transform: none; } }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+    @media (max-width: 830px) {
+      .app { padding: 18px; }
+      .layout { grid-template-columns: 1fr; }
+      .controls { position: static; }
+      textarea { min-height: 190px; }
+      .hero, .results-head { align-items: flex-start; }
+    }
+    @media (max-width: 580px) {
+      .hero, .results-head { flex-direction: column; }
+      .top-actions, .mini-actions { justify-content: flex-start; }
+      .top-actions .btn { flex: 1; }
+      .groups { grid-template-columns: 1fr; }
+      .results { min-height: 420px; }
+    }
+    @media print {
+      body { background: #fff; }
+      .app { width: 100%; padding: 0; }
+      .controls, .top-actions, .mini-actions, .subtitle { display: none !important; }
+      .layout { display: block; }
+      .panel, .group-card { box-shadow: none; }
+      .results { border: 0; padding: 0; }
+      .groups { grid-template-columns: repeat(3, 1fr); }
+      .group-card { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="hero">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">✦</div>
+        <div>
+          <h1>Organizador de grupos</h1>
+          <p class="subtitle">Forma equipos equilibrados en segundos.</p>
+        </div>
+      </div>
+      <div class="top-actions">
+        <button class="btn" id="fullscreenBtn" type="button">⛶ Pantalla completa</button>
+        <button class="btn" id="clearBtn" type="button">Limpiar</button>
+      </div>
+    </header>
+
+    <div class="layout">
+      <section class="panel controls" aria-labelledby="namesLabel">
+        <div class="label-row">
+          <label id="namesLabel" for="names">Lista de estudiantes</label>
+          <span class="count" id="studentCount">0 estudiantes</span>
+        </div>
+        <textarea id="names" spellcheck="false" placeholder="Escribe o pega los nombres aquí…&#10;&#10;Ana&#10;Carlos&#10;Daniel&#10;Elena"></textarea>
+        <p class="hint">Puedes separar los nombres con saltos de línea, comas o punto y coma. Los nombres repetidos se incluirán una sola vez.</p>
+
+        <div class="group-control">
+          <div>
+            <label for="groupCount">Número de grupos</label>
+            <select id="groupCount" aria-describedby="groupHint">
+              <option value="2">2 grupos</option><option value="3">3 grupos</option>
+              <option value="4" selected>4 grupos</option><option value="5">5 grupos</option>
+              <option value="6">6 grupos</option><option value="7">7 grupos</option>
+              <option value="8">8 grupos</option><option value="9">9 grupos</option>
+              <option value="10">10 grupos</option>
+            </select>
+          </div>
+          <div class="hint" id="groupHint" style="margin:0 0 11px">De 2 a 10</div>
+        </div>
+        <button class="btn btn-primary" id="divideBtn" type="button">✦ Formar grupos</button>
+        <button class="btn" id="exampleBtn" type="button" style="width:100%; margin-top:9px">Cargar lista de ejemplo</button>
+        <div class="error" id="error" role="alert"></div>
+      </section>
+
+      <section class="panel results" aria-labelledby="resultsTitle">
+        <div class="results-head">
+          <div>
+            <h2 class="results-title" id="resultsTitle">Tus grupos aparecerán aquí</h2>
+            <div class="summary" id="summary">Agrega estudiantes y elige cuántos grupos quieres formar.</div>
+          </div>
+          <div class="mini-actions" id="resultActions" hidden>
+            <button class="btn" id="reshuffleBtn" type="button">↻ Mezclar de nuevo</button>
+            <button class="btn" id="copyBtn" type="button">Copiar</button>
+            <button class="btn" id="printBtn" type="button">Imprimir</button>
+          </div>
+        </div>
+        <div id="output" aria-live="polite">
+          <div class="empty">
+            <div>
+              <div class="empty-graphic" aria-hidden="true"><span class="person p1"></span><span class="person p2"></span><span class="person p3"></span></div>
+              <h2>Listos para trabajar juntos</h2>
+              <p>Escribe los nombres de tus estudiantes y presiona <strong>Formar grupos</strong>.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (function () {
+      'use strict';
+      var namesInput = document.getElementById('names');
+      var countEl = document.getElementById('studentCount');
+      var groupSelect = document.getElementById('groupCount');
+      var output = document.getElementById('output');
+      var errorEl = document.getElementById('error');
+      var titleEl = document.getElementById('resultsTitle');
+      var summaryEl = document.getElementById('summary');
+      var actionsEl = document.getElementById('resultActions');
+      var toastEl = document.getElementById('toast');
+      var currentGroups = [];
+
+      function parseNames() {
+        var pieces = namesInput.value.split(/[\n,;]+/);
+        var names = [];
+        var seen = {};
+        for (var i = 0; i < pieces.length; i++) {
+          var name = pieces[i].replace(/^\s*(?:[-•*]|\d+[.)])\s*/, '').replace(/^\s+|\s+$/g, '');
+          var key = name.toLowerCase();
+          if (name && !seen[key]) {
+            seen[key] = true;
+            names.push(name);
+          }
+        }
+        return names;
+      }
+
+      function updateCount() {
+        var total = parseNames().length;
+        countEl.textContent = total + ' ' + (total === 1 ? 'estudiante' : 'estudiantes');
+      }
+
+      function shuffle(items) {
+        var shuffled = items.slice();
+        for (var i = shuffled.length - 1; i > 0; i--) {
+          var j = Math.floor(Math.random() * (i + 1));
+          var temporary = shuffled[i];
+          shuffled[i] = shuffled[j];
+          shuffled[j] = temporary;
+        }
+        return shuffled;
+      }
+
+      function makeGroups() {
+        var names = parseNames();
+        var numberOfGroups = Number(groupSelect.value);
+        errorEl.textContent = '';
+        if (names.length < 2) {
+          errorEl.textContent = 'Agrega por lo menos dos estudiantes.';
+          namesInput.focus(); return;
+        }
+        if (numberOfGroups > names.length) {
+          errorEl.textContent = 'No se pueden formar ' + numberOfGroups + ' grupos con solo ' + names.length + ' estudiantes.';
+          groupSelect.focus(); return;
+        }
+        var mixed = shuffle(names);
+        currentGroups = [];
+        for (var groupNumber = 0; groupNumber < numberOfGroups; groupNumber++) currentGroups.push([]);
+        for (var i = 0; i < mixed.length; i++) currentGroups[i % numberOfGroups].push(mixed[i]);
+        renderGroups();
+      }
+
+      function renderGroups() {
+        var total = 0;
+        var sizes = [];
+        for (var i = 0; i < currentGroups.length; i++) { total += currentGroups[i].length; sizes.push(currentGroups[i].length); }
+        titleEl.textContent = currentGroups.length + ' grupos formados';
+        var balanced = Math.max.apply(null, sizes) - Math.min.apply(null, sizes) <= 1;
+        summaryEl.textContent = total + ' estudiantes · ' + (balanced ? 'Distribución equilibrada' : 'Distribución completada');
+        actionsEl.hidden = false;
+        output.innerHTML = '';
+        var grid = document.createElement('div');
+        grid.className = 'groups';
+        for (var groupIndex = 0; groupIndex < currentGroups.length; groupIndex++) {
+          var group = currentGroups[groupIndex];
+          var article = document.createElement('article');
+          article.className = 'group-card';
+          article.style.animationDelay = (groupIndex * 65) + 'ms';
+          var head = document.createElement('div');
+          head.className = 'group-head';
+          var heading = document.createElement('h3');
+          heading.textContent = 'Grupo ' + (groupIndex + 1);
+          var size = document.createElement('span');
+          size.className = 'group-size';
+          size.textContent = group.length + ' ' + (group.length === 1 ? 'persona' : 'personas');
+          head.appendChild(heading); head.appendChild(size);
+          var list = document.createElement('ol');
+          list.className = 'names';
+          for (var nameIndex = 0; nameIndex < group.length; nameIndex++) {
+            var item = document.createElement('li');
+            var number = document.createElement('span');
+            number.className = 'number'; number.textContent = nameIndex + 1;
+            var text = document.createElement('span'); text.textContent = group[nameIndex];
+            item.appendChild(number); item.appendChild(text); list.appendChild(item);
+          }
+          article.appendChild(head); article.appendChild(list); grid.appendChild(article);
+        }
+        output.appendChild(grid);
+      }
+
+      function showToast(message) {
+        toastEl.textContent = message; toastEl.classList.add('show');
+        window.clearTimeout(showToast.timer);
+        showToast.timer = window.setTimeout(function () { toastEl.classList.remove('show'); }, 1900);
+      }
+
+      function copyGroups() {
+        var sections = [];
+        for (var i = 0; i < currentGroups.length; i++) {
+          var lines = ['GRUPO ' + (i + 1)];
+          for (var j = 0; j < currentGroups[i].length; j++) lines.push('• ' + currentGroups[i][j]);
+          sections.push(lines.join('\n'));
+        }
+        var text = sections.join('\n\n');
+        var area = document.createElement('textarea'); area.value = text;
+        document.body.appendChild(area); area.select();
+        try { document.execCommand('copy'); showToast('Grupos copiados'); }
+        catch (copyError) { showToast('Selecciona y copia los grupos'); }
+        document.body.removeChild(area);
+      }
+
+      function clearAll() {
+        namesInput.value = ''; currentGroups = []; updateCount(); errorEl.textContent = '';
+        titleEl.textContent = 'Tus grupos aparecerán aquí';
+        summaryEl.textContent = 'Agrega estudiantes y elige cuántos grupos quieres formar.';
+        actionsEl.hidden = true;
+        output.innerHTML = '<div class="empty"><div><div class="empty-graphic" aria-hidden="true"><span class="person p1"></span><span class="person p2"></span><span class="person p3"></span></div><h2>Listos para trabajar juntos</h2><p>Escribe los nombres de tus estudiantes y presiona <strong>Formar grupos</strong>.</p></div></div>';
+        namesInput.focus();
+      }
+
+      document.getElementById('divideBtn').addEventListener('click', makeGroups);
+      document.getElementById('reshuffleBtn').addEventListener('click', makeGroups);
+      document.getElementById('copyBtn').addEventListener('click', copyGroups);
+      document.getElementById('printBtn').addEventListener('click', function () { window.print(); });
+      document.getElementById('clearBtn').addEventListener('click', clearAll);
+      document.getElementById('exampleBtn').addEventListener('click', function () {
+        namesInput.value = 'Ana\nCarlos\nDaniel\nElena\nJosé\nLucía\nMarcos\nSofía\nValeria\nMateo\nCamila\nDiego';
+        groupSelect.value = '4'; updateCount(); makeGroups();
+      });
+      document.getElementById('fullscreenBtn').addEventListener('click', function () {
+        var element = document.documentElement;
+        var enter = element.requestFullscreen || element.webkitRequestFullscreen;
+        var leave = document.exitFullscreen || document.webkitExitFullscreen;
+        try {
+          if (!document.fullscreenElement && !document.webkitFullscreenElement && enter) enter.call(element);
+          else if (leave) leave.call(document);
+          else showToast('Pantalla completa no disponible');
+        } catch (fullscreenError) { showToast('Pantalla completa no disponible'); }
+      });
+      namesInput.addEventListener('input', updateCount);
+      namesInput.addEventListener('keydown', function (event) {
+        if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') makeGroups();
+      });
+      updateCount();
+    }());
+  </script>
+</body>
+</html>
