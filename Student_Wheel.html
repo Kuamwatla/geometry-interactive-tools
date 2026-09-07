@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f6fb">
+  <title>Ruleta de estudiantes</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f4f6fb;
+      --panel: #ffffff;
+      --text: #172033;
+      --muted: #667085;
+      --border: #d7dce5;
+      --primary: #243b6b;
+      --primary-hover: #1b2d53;
+      --focus: #2563eb;
+      --danger: #b42318;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; padding: clamp(14px, 2.5vw, 28px); background: var(--bg); color: var(--text); }
+    .app { width: min(1160px, 100%); margin: 0 auto; }
+    header { margin-bottom: 18px; text-align: center; }
+    h1 { margin: 0; font-size: clamp(1.55rem, 3vw, 2.3rem); }
+    header p { margin: 6px 0 0; color: var(--muted); }
+    .layout { display: grid; grid-template-columns: minmax(0, 1.18fr) minmax(290px, .82fr); gap: 22px; align-items: start; }
+    .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 18px; padding: clamp(15px, 2vw, 22px); box-shadow: 0 10px 30px rgba(31, 42, 68, .07); }
+    .wheel-panel { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+    .wheel-stage { position: relative; width: min(100%, 560px); aspect-ratio: 1; }
+    canvas { display: block; width: 100%; height: 100%; }
+    .pointer { position: absolute; right: -4px; top: 50%; z-index: 2; width: 0; height: 0; transform: translateY(-50%); border-top: 18px solid transparent; border-bottom: 18px solid transparent; border-right: 36px solid var(--text); filter: drop-shadow(0 2px 1px rgba(0,0,0,.18)); }
+    .result { min-height: 1.25em; font-size: clamp(1.6rem, 4vw, 2.8rem); font-weight: 800; text-align: center; }
+    .actions, .row { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+    button { min-height: 44px; padding: 10px 16px; border: 1px solid #c9ced8; border-radius: 11px; background: #fff; color: var(--text); font: inherit; font-weight: 700; cursor: pointer; }
+    button:hover:not(:disabled) { background: #f1f3f7; }
+    button.primary { background: var(--primary); border-color: var(--primary); color: #fff; padding-inline: 28px; }
+    button.primary:hover:not(:disabled) { background: var(--primary-hover); }
+    button.danger { color: var(--danger); }
+    button:disabled { opacity: .42; cursor: not-allowed; }
+    button:focus-visible, textarea:focus-visible { outline: 3px solid color-mix(in srgb, var(--focus) 42%, transparent); outline-offset: 2px; }
+    label { display: block; font-weight: 750; }
+    .help { margin: 6px 0 12px; color: var(--muted); font-size: .92rem; }
+    textarea { width: 100%; min-height: 300px; resize: vertical; padding: 13px; border: 1px solid #c9ced8; border-radius: 11px; background: #fbfcfe; color: var(--text); font: inherit; line-height: 1.45; }
+    .count { margin: 14px 0 0; font-weight: 750; text-align: center; }
+    .tip { margin: 15px 0 0; color: var(--muted); font-size: .9rem; line-height: 1.45; }
+    @media (max-width: 780px) {
+      .layout { grid-template-columns: 1fr; }
+      textarea { min-height: 220px; }
+    }
+    @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <h1>Ruleta de estudiantes</h1>
+      <p>Selección aleatoria para la participación en clase</p>
+    </header>
+    <div class="layout">
+      <section class="panel wheel-panel" aria-label="Ruleta">
+        <div class="wheel-stage">
+          <canvas id="wheelCanvas" width="700" height="700" aria-label="Ruleta con los nombres disponibles"></canvas>
+          <div class="pointer" aria-hidden="true"></div>
+        </div>
+        <div class="result" id="result" aria-live="polite">Lista para elegir</div>
+        <div class="actions">
+          <button class="primary" id="spinBtn" type="button">GIRAR</button>
+          <button id="removeBtn" type="button" disabled>Eliminar seleccionado</button>
+          <button id="resetBtn" type="button">Nueva ronda</button>
+        </div>
+      </section>
+
+      <section class="panel" aria-label="Lista de estudiantes">
+        <label for="names">Nombres de estudiantes</label>
+        <p class="help">Escribe o pega un nombre por línea.</p>
+        <textarea id="names" spellcheck="false">Ana
+Carlos
+Daniel
+Elena
+José
+Lucía
+Marcos
+Sofía</textarea>
+        <div class="row">
+          <button id="loadBtn" type="button">Actualizar ruleta</button>
+          <button class="danger" id="clearBtn" type="button">Borrar lista</button>
+        </div>
+        <div class="count" id="count" aria-live="polite">8 estudiantes disponibles</div>
+        <p class="tip">Después de cada participación, usa «Eliminar seleccionado». Cuando la lista se vacíe, pulsa «Nueva ronda».</p>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    const canvas = document.getElementById('wheelCanvas');
+    const ctx = canvas.getContext('2d');
+    const namesBox = document.getElementById('names');
+    const spinBtn = document.getElementById('spinBtn');
+    const removeBtn = document.getElementById('removeBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const loadBtn = document.getElementById('loadBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const result = document.getElementById('result');
+    const count = document.getElementById('count');
+
+    let master = [];
+    let active = [];
+    let angle = 0;
+    let spinning = false;
+    let selectedIndex = -1;
+    let audioCtx = null;
+    let tickInterval = null;
+
+    const palette = ['#4f46e5','#0891b2','#059669','#ca8a04','#dc2626','#9333ea','#2563eb','#ea580c','#0f766e','#be123c'];
+
+    function parseNames() {
+      return [...new Set(namesBox.value.split(/\n+/).map(name => name.trim()).filter(Boolean))].slice(0, 100);
+    }
+
+    function updateCount() {
+      const singular = active.length === 1;
+      count.textContent = `${active.length} estudiante${singular ? '' : 's'} disponible${singular ? '' : 's'}`;
+      spinBtn.disabled = !active.length || spinning;
+    }
+
+    function drawWheel() {
+      const w = canvas.width;
+      const h = canvas.height;
+      const cx = w / 2;
+      const cy = h / 2;
+      const radius = 315;
+      ctx.clearRect(0, 0, w, h);
+
+      if (!active.length) {
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+        ctx.fillStyle = '#d1d5db';
+        ctx.fill();
+        ctx.strokeStyle = '#98a2b3';
+        ctx.lineWidth = 4;
+        ctx.stroke();
+        return;
+      }
+
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(angle);
+      const arc = Math.PI * 2 / active.length;
+
+      active.forEach((name, index) => {
+        const start = index * arc;
+        const middle = start + arc / 2;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.arc(0, 0, radius, start, start + arc);
+        ctx.closePath();
+        ctx.fillStyle = palette[index % palette.length];
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,.82)';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+        ctx.save();
+        ctx.rotate(middle);
+        ctx.translate(radius * .63, 0);
+        const absolute = ((middle + angle) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+        if (absolute > Math.PI / 2 && absolute < Math.PI * 1.5) ctx.rotate(Math.PI);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = `700 ${Math.max(17, Math.min(31, 260 / Math.max(name.length, 7)))}px system-ui`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.shadowColor = 'rgba(0,0,0,.3)';
+        ctx.shadowBlur = 2;
+        ctx.fillText(name, 0, 0, 205);
+        ctx.restore();
+      });
+
+      ctx.beginPath();
+      ctx.arc(0, 0, 55, 0, Math.PI * 2);
+      ctx.fillStyle = '#ffffff';
+      ctx.fill();
+      ctx.lineWidth = 6;
+      ctx.strokeStyle = '#172033';
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function loadNames() {
+      master = parseNames();
+      active = [...master];
+      selectedIndex = -1;
+      removeBtn.disabled = true;
+      result.textContent = active.length ? 'Lista para elegir' : 'Agrega estudiantes';
+      angle = 0;
+      updateCount();
+      drawWheel();
+    }
+
+    function removeSelected() {
+      if (selectedIndex < 0 || selectedIndex >= active.length || spinning) return;
+      active.splice(selectedIndex, 1);
+      selectedIndex = -1;
+      removeBtn.disabled = true;
+      result.textContent = active.length ? 'Seleccionado eliminado' : 'Ronda completada';
+      updateCount();
+      drawWheel();
+    }
+
+    function resetRound() {
+      if (spinning) return;
+      active = [...master];
+      selectedIndex = -1;
+      removeBtn.disabled = true;
+      result.textContent = active.length ? 'Nueva ronda' : 'Agrega estudiantes';
+      angle = 0;
+      updateCount();
+      drawWheel();
+    }
+
+    function ensureAudio() {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass) return null;
+      if (!audioCtx) audioCtx = new AudioContextClass();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      return audioCtx;
+    }
+
+    function beep(frequency = 440, duration = .08, type = 'square', volume = .03, delay = 0) {
+      if (!ensureAudio()) return;
+      const start = audioCtx.currentTime + delay;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(frequency, start);
+      gain.gain.setValueAtTime(.0001, start);
+      gain.gain.exponentialRampToValueAtTime(volume, start + .01);
+      gain.gain.exponentialRampToValueAtTime(.0001, start + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(start);
+      osc.stop(start + duration + .02);
+    }
+
+    function startWheelSound() {
+      if (!ensureAudio()) return;
+      stopWheelSound();
+      tickInterval = setInterval(() => beep(900, .03, 'square', .018), 90);
+    }
+
+    function stopWheelSound() {
+      if (tickInterval) clearInterval(tickInterval);
+      tickInterval = null;
+    }
+
+    function playFanfare() {
+      beep(523.25, .15, 'triangle', .04, 0);
+      beep(659.25, .15, 'triangle', .04, .12);
+      beep(783.99, .18, 'triangle', .04, .24);
+      beep(1046.50, .35, 'triangle', .05, .40);
+    }
+
+    function spinWheel() {
+      if (spinning || !active.length) return;
+      ensureAudio();
+      spinning = true;
+      selectedIndex = -1;
+      removeBtn.disabled = true;
+      spinBtn.disabled = true;
+      result.textContent = 'Girando…';
+      startWheelSound();
+
+      const startTime = performance.now();
+      const duration = 2900;
+      const startAngle = angle;
+      const extra = Math.PI * 2 * (6 + Math.random() * 3) + Math.random() * Math.PI * 2;
+
+      function frame(now) {
+        const progress = Math.min(1, (now - startTime) / duration);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        angle = startAngle + extra * eased;
+        drawWheel();
+        if (progress < 1) {
+          requestAnimationFrame(frame);
+          return;
+        }
+
+        spinning = false;
+        angle = ((angle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+        const arc = Math.PI * 2 / active.length;
+        const normalized = ((-angle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+        selectedIndex = Math.min(active.length - 1, Math.floor(normalized / arc));
+        stopWheelSound();
+        playFanfare();
+        result.textContent = active[selectedIndex];
+        removeBtn.disabled = false;
+        updateCount();
+        drawWheel();
+      }
+
+      requestAnimationFrame(frame);
+    }
+
+    spinBtn.addEventListener('click', spinWheel);
+    removeBtn.addEventListener('click', removeSelected);
+    resetBtn.addEventListener('click', resetRound);
+    loadBtn.addEventListener('click', loadNames);
+    clearBtn.addEventListener('click', () => {
+      if (spinning) return;
+      namesBox.value = '';
+      master = [];
+      active = [];
+      selectedIndex = -1;
+      removeBtn.disabled = true;
+      result.textContent = 'Agrega estudiantes';
+      updateCount();
+      drawWheel();
+    });
+
+    loadNames();
+  </script>
+</body>
+</html>
