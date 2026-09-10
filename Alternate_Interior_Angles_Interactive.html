@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Alternate Interior Angles - Interactive</title>
+  <style>
+    :root {
+      --ink: #15202b;
+      --blue: #2f93ff;
+      --green: #58c779;
+      --pale: #eef7ff;
+      --line: #c8d8e6;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--ink);
+      background: #fff;
+      display: grid;
+      place-items: center;
+    }
+    .app {
+      width: min(1100px, 100vw);
+      min-height: 100vh;
+      padding: 18px 22px 24px;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 10px;
+    }
+    header { text-align: center; }
+    h1 {
+      margin: 0;
+      font-size: clamp(28px, 4vw, 48px);
+      color: #061747;
+      letter-spacing: .02em;
+    }
+    header p { margin: 6px 0 0; font-size: clamp(14px, 2vw, 20px); }
+    .stage {
+      min-height: 430px;
+      border: 2px solid var(--line);
+      border-radius: 18px;
+      background: #fff;
+      overflow: hidden;
+      position: relative;
+    }
+    svg { width: 100%; height: 100%; display: block; touch-action: none; }
+    .parallel { stroke: var(--ink); stroke-width: 8; stroke-linecap: round; }
+    .transversal { stroke: var(--green); stroke-width: 9; stroke-linecap: round; }
+    .arc { fill: none; stroke: var(--blue); stroke-width: 11; stroke-linecap: round; }
+    .drag-handle { fill: var(--blue); stroke: #fff; stroke-width: 4; cursor: grab; }
+    .drag-handle:active { cursor: grabbing; }
+    .intersection { fill: var(--ink); }
+    .angle-value { font-size: 28px; font-weight: 700; fill: var(--ink); }
+    .line-label { font-size: 29px; font-style: italic; fill: var(--ink); }
+    .angle-id { font-size: 22px; font-weight: 700; fill: #0b5fb3; }
+    .parallel-mark { fill: none; stroke: var(--ink); stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; }
+    .result { font-size: 27px; font-weight: 700; fill: var(--ink); }
+    .hint { font-size: 18px; fill: #526371; }
+    .controls {
+      display: grid;
+      grid-template-columns: auto minmax(230px, 1fr) 90px auto;
+      gap: 18px;
+      align-items: center;
+      padding: 12px 16px;
+      border: 2px solid var(--line);
+      border-radius: 16px;
+      background: var(--pale);
+    }
+    label { font-weight: 700; white-space: nowrap; }
+    input[type="range"] { width: 100%; accent-color: var(--blue); }
+    input[type="number"] {
+      width: 90px;
+      border: 2px solid #8bbcea;
+      border-radius: 10px;
+      padding: 8px;
+      background: #fff;
+      color: #061747;
+      font: inherit;
+      font-weight: 700;
+    }
+    button {
+      border: 2px solid #8bbcea;
+      border-radius: 10px;
+      padding: 8px 13px;
+      background: #fff;
+      color: #061747;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    button:hover, button:focus-visible { background: #dceeff; outline: none; }
+    @media (max-width: 720px) {
+      .app { padding: 10px; }
+      .controls { grid-template-columns: 1fr; }
+      .stage { min-height: 390px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <h1>ALTERNATE INTERIOR ANGLES</h1>
+      <p>Inside the parallel lines and on opposite sides of the transversal.</p>
+    </header>
+
+    <section class="stage" aria-label="Interactive alternate interior angles diagram">
+      <svg id="diagram" viewBox="0 0 960 580" role="img" aria-labelledby="svgTitle svgDesc">
+        <title id="svgTitle">Alternate interior angles</title>
+        <desc id="svgDesc">Two parallel horizontal lines crossed by a movable transversal. Two alternate interior angles are highlighted and have equal measures.</desc>
+
+        <line class="parallel" x1="105" y1="180" x2="855" y2="180" />
+        <line class="parallel" x1="105" y1="400" x2="855" y2="400" />
+        <path class="parallel-mark" d="M245 167 l16 13 -16 13 M269 167 l16 13 -16 13" />
+        <path class="parallel-mark" d="M245 387 l16 13 -16 13 M269 387 l16 13 -16 13" />
+        <text class="line-label" x="872" y="188">ℓ</text>
+        <text class="line-label" x="872" y="408">m</text>
+
+        <line id="transversal" class="transversal" />
+        <circle id="topIntersection" class="intersection" r="6" />
+        <circle id="bottomIntersection" class="intersection" r="6" />
+
+        <path id="topArc" class="arc" />
+        <path id="bottomArc" class="arc" />
+        <text id="topValue" class="angle-value"></text>
+        <text id="bottomValue" class="angle-value"></text>
+        <text id="topId" class="angle-id">∠1</text>
+        <text id="bottomId" class="angle-id">∠2</text>
+
+        <polygon id="topHandle" class="drag-handle" tabindex="0" aria-label="Drag to change the transversal angle" />
+        <polygon id="bottomHandle" class="drag-handle" tabindex="0" aria-label="Drag to change the transversal angle" />
+
+        <text id="result" class="result" x="480" y="526" text-anchor="middle"></text>
+        <text class="hint" x="480" y="554" text-anchor="middle">Drag either blue arrow or use the slider.</text>
+      </svg>
+    </section>
+
+    <section class="controls" aria-label="Angle controls">
+      <label for="angleSlider">Transversal angle: <output id="angleOutput">55°</output></label>
+      <input id="angleSlider" type="range" min="20" max="160" value="55" step="1">
+      <input id="angleNumber" type="number" min="20" max="160" value="55" step="1" aria-label="Exact transversal angle">
+      <button id="randomAngle" type="button">Random angle</button>
+    </section>
+  </main>
+
+  <script>
+    (() => {
+      const svg = document.getElementById('diagram');
+      const slider = document.getElementById('angleSlider');
+      const number = document.getElementById('angleNumber');
+      const output = document.getElementById('angleOutput');
+      const line = document.getElementById('transversal');
+      const topIntersection = document.getElementById('topIntersection');
+      const bottomIntersection = document.getElementById('bottomIntersection');
+      const topArc = document.getElementById('topArc');
+      const bottomArc = document.getElementById('bottomArc');
+      const topValue = document.getElementById('topValue');
+      const bottomValue = document.getElementById('bottomValue');
+      const topId = document.getElementById('topId');
+      const bottomId = document.getElementById('bottomId');
+      const topHandle = document.getElementById('topHandle');
+      const bottomHandle = document.getElementById('bottomHandle');
+      const result = document.getElementById('result');
+
+      const cx = 480, cy = 290, yTop = 180, yBottom = 400;
+      const lineHalfLength = 430;
+      let angle = Number(slider.value);
+      let dragging = false;
+
+      const rad = degrees => degrees * Math.PI / 180;
+      const pointOnRay = (x, y, degrees, distance) => ({
+        x: x + Math.cos(rad(degrees)) * distance,
+        y: y - Math.sin(rad(degrees)) * distance
+      });
+      const arcPath = (x, y, startDeg, endDeg, radius) => {
+        const start = pointOnRay(x, y, startDeg, radius);
+        const end = pointOnRay(x, y, endDeg, radius);
+        const delta = ((endDeg - startDeg) % 360 + 360) % 360;
+        return `M ${start.x.toFixed(2)} ${start.y.toFixed(2)} A ${radius} ${radius} 0 ${delta > 180 ? 1 : 0} 0 ${end.x.toFixed(2)} ${end.y.toFixed(2)}`;
+      };
+      const arrowPolygon = (x, y, directionDeg) => {
+        const tip = pointOnRay(x, y, directionDeg, 0);
+        const back = pointOnRay(x, y, directionDeg + 180, 28);
+        const left = pointOnRay(back.x, back.y, directionDeg + 90, 13);
+        const right = pointOnRay(back.x, back.y, directionDeg - 90, 13);
+        return `${tip.x},${tip.y} ${left.x},${left.y} ${right.x},${right.y}`;
+      };
+
+      function render() {
+        const t = rad(angle);
+        const dx = Math.cos(t), dy = -Math.sin(t);
+        const x1 = cx - dx * lineHalfLength;
+        const y1 = cy - dy * lineHalfLength;
+        const x2 = cx + dx * lineHalfLength;
+        const y2 = cy + dy * lineHalfLength;
+        line.setAttribute('x1', x1); line.setAttribute('y1', y1);
+        line.setAttribute('x2', x2); line.setAttribute('y2', y2);
+
+        const topT = (yTop - cy) / dy;
+        const bottomT = (yBottom - cy) / dy;
+        const xt = cx + dx * topT;
+        const xb = cx + dx * bottomT;
+        topIntersection.setAttribute('cx', xt); topIntersection.setAttribute('cy', yTop);
+        bottomIntersection.setAttribute('cx', xb); bottomIntersection.setAttribute('cy', yBottom);
+
+        // Alternate interior pair: below-left at the upper intersection and
+        // above-right at the lower intersection. Both have measure angle.
+        topArc.setAttribute('d', arcPath(xt, yTop, 180, 180 + angle, 52));
+        bottomArc.setAttribute('d', arcPath(xb, yBottom, 0, angle, 52));
+
+        const topLabel = pointOnRay(xt, yTop, 180 + angle / 2, 88);
+        const bottomLabel = pointOnRay(xb, yBottom, angle / 2, 88);
+        topValue.setAttribute('x', topLabel.x - 18); topValue.setAttribute('y', topLabel.y + 8);
+        bottomValue.setAttribute('x', bottomLabel.x - 10); bottomValue.setAttribute('y', bottomLabel.y + 8);
+        topValue.textContent = `${angle}°`;
+        bottomValue.textContent = `${angle}°`;
+
+        const topIdP = pointOnRay(xt, yTop, 180 + angle / 2, 42);
+        const bottomIdP = pointOnRay(xb, yBottom, angle / 2, 42);
+        topId.setAttribute('x', topIdP.x - 12); topId.setAttribute('y', topIdP.y + 7);
+        bottomId.setAttribute('x', bottomIdP.x - 10); bottomId.setAttribute('y', bottomIdP.y + 7);
+
+        topHandle.setAttribute('points', arrowPolygon(x2, y2, angle));
+        bottomHandle.setAttribute('points', arrowPolygon(x1, y1, angle + 180));
+
+        slider.value = angle;
+        number.value = angle;
+        output.value = `${angle}°`;
+        output.textContent = `${angle}°`;
+        result.textContent = `Alternate interior angles: ${angle}° = ${angle}°`;
+      }
+
+      function pointerAngle(event) {
+        const pt = svg.createSVGPoint();
+        pt.x = event.clientX; pt.y = event.clientY;
+        const local = pt.matrixTransform(svg.getScreenCTM().inverse());
+        const raw = Math.atan2(cy - local.y, local.x - cx) * 180 / Math.PI;
+        const normalized = raw < 0 ? raw + 180 : raw;
+        return Math.max(20, Math.min(160, Math.round(normalized)));
+      }
+
+      function beginDrag(event) {
+        dragging = true;
+        svg.setPointerCapture?.(event.pointerId);
+        event.preventDefault();
+      }
+      topHandle.addEventListener('pointerdown', beginDrag);
+      bottomHandle.addEventListener('pointerdown', beginDrag);
+      svg.addEventListener('pointermove', event => {
+        if (!dragging) return;
+        angle = pointerAngle(event);
+        slider.value = angle;
+        render();
+      });
+      svg.addEventListener('pointerup', () => { dragging = false; });
+      svg.addEventListener('pointercancel', () => { dragging = false; });
+
+      slider.addEventListener('input', () => {
+        angle = Number(slider.value);
+        render();
+      });
+      number.addEventListener('input', () => {
+        angle = Math.max(20, Math.min(160, Math.round(Number(number.value) || 20)));
+        render();
+      });
+      document.getElementById('randomAngle').addEventListener('click', () => {
+        angle = Math.floor(Math.random() * 121) + 30;
+        render();
+      });
+      [topHandle, bottomHandle].forEach(handle => {
+        handle.addEventListener('keydown', event => {
+          if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return;
+          event.preventDefault();
+          angle = Math.max(20, Math.min(160, angle + (event.key === 'ArrowRight' || event.key === 'ArrowUp' ? 1 : -1)));
+          slider.value = angle;
+          render();
+        });
+      });
+
+      render();
+    })();
+  </script>
+</body>
+</html>
