@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Interactive Linear Pair</title>
+<style>
+  :root{color-scheme:light;--ink:#111827;--paper:#fff;--panel:#f5fff8;--border:#19d46b;--red:#e01717;--blue:#1265e8;--muted:#475569}
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%;background:var(--paper);font-family:Arial,Helvetica,sans-serif;color:var(--ink)}
+  body{padding:18px;display:grid;place-items:center}
+  main{width:min(100%,1050px)}
+  h1{text-align:center;margin:0 0 8px;font-size:clamp(24px,3.4vw,42px)}
+  .hint{text-align:center;margin:0 0 12px;color:var(--muted);font-size:clamp(15px,2vw,20px)}
+  .board{border:3px solid var(--border);border-radius:16px;background:var(--panel);overflow:hidden;touch-action:none;user-select:none}
+  svg{display:block;width:100%;height:auto;aspect-ratio:4/3}
+  .straight-line{stroke:var(--ink);stroke-width:7;stroke-linecap:round}
+  .baseline-arrow{fill:var(--ink)}
+  .ray{stroke:var(--blue);stroke-width:10;stroke-linecap:round}
+  .hit-ray{stroke:transparent;stroke-width:48;cursor:grab}
+  .hit-ray:active,.handle{cursor:grabbing}
+  .ray-arrow{fill:var(--blue);pointer-events:none}
+  .angle-arc{fill:none;stroke:var(--red);stroke-width:8;stroke-linecap:round}
+  .angle-value{font-size:38px;font-weight:700;fill:var(--red);text-anchor:middle;dominant-baseline:middle;paint-order:stroke;stroke:var(--panel);stroke-width:8px;stroke-linejoin:round}
+  .angle-label{font-size:25px;font-weight:700;fill:var(--ink);text-anchor:middle;dominant-baseline:middle;paint-order:stroke;stroke:var(--panel);stroke-width:7px}
+  .center{fill:var(--blue);stroke:var(--paper);stroke-width:6}
+  .handle{fill:var(--blue);stroke:var(--paper);stroke-width:5;cursor:grab}
+  .handle-ring{fill:transparent;stroke:transparent;stroke-width:32;cursor:grab}
+  .footer{display:flex;justify-content:center;gap:12px;align-items:center;flex-wrap:wrap;margin-top:12px}
+  button{appearance:none;border:1px solid #cbd5e1;border-radius:9px;background:#fff;color:var(--ink);font:inherit;font-weight:700;padding:10px 16px;cursor:pointer}
+  button:hover{background:#f1f5f9}
+  #summary{font-size:20px;font-weight:700;min-width:350px;text-align:center}
+  @media(max-width:600px){body{padding:8px}.board{border-width:2px}.angle-value{font-size:31px}.angle-label{font-size:21px}.ray{stroke-width:8}#summary{min-width:100%}}
+</style>
+</head>
+<body>
+<main>
+  <h1>Interactive Linear Pair</h1>
+  <p class="hint">Drag the blue arrow. The adjacent angles always add to 180°.</p>
+  <div class="board">
+    <svg id="diagram" viewBox="0 0 900 675" role="img" aria-labelledby="svgTitle svgDesc">
+      <title id="svgTitle">Interactive linear pair</title>
+      <desc id="svgDesc">A black straight line and a movable blue ray form two adjacent supplementary angles.</desc>
+      <g id="baseline"></g>
+      <g id="rayLayer"></g>
+      <g id="arcLayer"></g>
+      <g id="labelLayer"></g>
+      <circle class="center" cx="450" cy="430" r="13"></circle>
+      <g id="handleLayer"></g>
+    </svg>
+  </div>
+  <div class="footer">
+    <button id="reset" type="button">Reset</button>
+    <button id="random" type="button">Random position</button>
+    <div id="summary" aria-live="polite"></div>
+  </div>
+</main>
+<script>
+(function(){
+  'use strict';
+  var svg=document.getElementById('diagram');
+  var baseline=document.getElementById('baseline');
+  var rayLayer=document.getElementById('rayLayer');
+  var arcLayer=document.getElementById('arcLayer');
+  var labelLayer=document.getElementById('labelLayer');
+  var handleLayer=document.getElementById('handleLayer');
+  var summary=document.getElementById('summary');
+  var NS='http://www.w3.org/2000/svg';
+  var cx=450,cy=430,lineLength=360,rayLength=315,angle=60,dragging=false;
+
+  function el(name,attrs,text){
+    var node=document.createElementNS(NS,name),key;
+    for(key in attrs){node.setAttribute(key,attrs[key]);}
+    if(text!==undefined){node.textContent=text;}
+    return node;
+  }
+  function clear(node){while(node.firstChild){node.removeChild(node.firstChild);}}
+  function point(a,r){var rad=a*Math.PI/180;return{x:cx+r*Math.cos(rad),y:cy-r*Math.sin(rad)};}
+  function arcPath(start,end,r){
+    var p1=point(start,r),p2=point(end,r),delta=end-start;
+    return 'M '+p1.x+' '+p1.y+' A '+r+' '+r+' 0 '+(delta>180?1:0)+' 0 '+p2.x+' '+p2.y;
+  }
+  function arrowPoints(a,length,colorClass,layer){
+    var tip=point(a,length),back=point(a,length-27),side=13,rad=a*Math.PI/180;
+    var px=Math.sin(rad)*side,py=Math.cos(rad)*side;
+    layer.appendChild(el('polygon',{class:colorClass,points:tip.x+','+tip.y+' '+(back.x+px)+','+(back.y+py)+' '+(back.x-px)+','+(back.y-py)}));
+  }
+  function classify(v){if(v<90)return'acute angle';if(v===90)return'right angle';return'obtuse angle';}
+  function render(){
+    clear(baseline);clear(rayLayer);clear(arcLayer);clear(labelLayer);clear(handleLayer);
+    var left=point(180,lineLength),right=point(0,lineLength),tip=point(angle,rayLength);
+    baseline.appendChild(el('line',{class:'straight-line',x1:left.x,y1:left.y,x2:right.x,y2:right.y}));
+    arrowPoints(0,lineLength,'baseline-arrow',baseline);arrowPoints(180,lineLength,'baseline-arrow',baseline);
+    rayLayer.appendChild(el('line',{class:'ray',x1:cx,y1:cy,x2:tip.x,y2:tip.y}));
+    rayLayer.appendChild(el('line',{class:'hit-ray',x1:cx,y1:cy,x2:tip.x,y2:tip.y}));
+    arrowPoints(angle,rayLength,'ray-arrow',rayLayer);
+    arcLayer.appendChild(el('path',{class:'angle-arc',d:arcPath(0,angle,76)}));
+    arcLayer.appendChild(el('path',{class:'angle-arc',d:arcPath(angle,180,76)}));
+
+    var rightValue=angle,leftValue=180-angle;
+    var rightMid=angle/2,leftMid=(angle+180)/2;
+    var rv=point(rightMid,112),rn=point(rightMid,190);
+    var lv=point(leftMid,112),ln=point(leftMid,190);
+    labelLayer.appendChild(el('text',{class:'angle-value',x:rv.x,y:rv.y},rightValue+'°'));
+    labelLayer.appendChild(el('text',{class:'angle-label',x:rn.x,y:rn.y},'∠2 · '+classify(rightValue)));
+    labelLayer.appendChild(el('text',{class:'angle-value',x:lv.x,y:lv.y},leftValue+'°'));
+    labelLayer.appendChild(el('text',{class:'angle-label',x:ln.x,y:ln.y},'∠1 · '+classify(leftValue)));
+    handleLayer.appendChild(el('circle',{class:'handle-ring',cx:tip.x,cy:tip.y,r:27}));
+    handleLayer.appendChild(el('circle',{class:'handle',cx:tip.x,cy:tip.y,r:12}));
+    summary.textContent='Linear pair: ∠1 + ∠2 = '+leftValue+'° + '+rightValue+'° = 180°';
+  }
+  function svgPoint(evt){
+    var rect=svg.getBoundingClientRect();
+    return{x:(evt.clientX-rect.left)*900/rect.width,y:(evt.clientY-rect.top)*675/rect.height};
+  }
+  function move(evt){
+    if(!dragging)return;
+    var p=svgPoint(evt),a=Math.atan2(cy-p.y,p.x-cx)*180/Math.PI;
+    angle=Math.max(10,Math.min(170,Math.round(a)));
+    render();evt.preventDefault();
+  }
+  svg.addEventListener('pointerdown',function(evt){
+    if(evt.target.classList.contains('handle')||evt.target.classList.contains('handle-ring')||evt.target.classList.contains('hit-ray')){
+      dragging=true;svg.setPointerCapture(evt.pointerId);move(evt);
+    }
+  });
+  svg.addEventListener('pointermove',move);
+  svg.addEventListener('pointerup',function(evt){dragging=false;if(svg.hasPointerCapture(evt.pointerId))svg.releasePointerCapture(evt.pointerId);});
+  svg.addEventListener('pointercancel',function(){dragging=false;});
+  document.getElementById('reset').addEventListener('click',function(){angle=60;render();});
+  document.getElementById('random').addEventListener('click',function(){angle=Math.floor(Math.random()*151)+15;render();});
+  render();
+})();
+</script>
+</body>
+</html>
