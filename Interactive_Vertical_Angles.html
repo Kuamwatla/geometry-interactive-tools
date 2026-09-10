@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Interactive Vertical Angles</title>
+<style>
+  :root{color-scheme:light;--ink:#111827;--paper:#ffffff;--panel:#f5fff8;--border:#19d46b;--red:#e01717;--blue:#1265e8;--muted:#475569}
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%;background:var(--paper);font-family:Arial,Helvetica,sans-serif;color:var(--ink)}
+  body{padding:18px;display:grid;place-items:center}
+  main{width:min(100%,1050px)}
+  h1{text-align:center;margin:0 0 8px;font-size:clamp(24px,3.4vw,42px)}
+  .hint{text-align:center;margin:0 0 12px;color:var(--muted);font-size:clamp(15px,2vw,20px)}
+  .board{border:3px solid var(--border);border-radius:16px;background:var(--panel);overflow:hidden;touch-action:none;user-select:none}
+  svg{display:block;width:100%;height:auto;aspect-ratio:4/3}
+  .horizon{stroke:var(--ink);stroke-width:5;stroke-linecap:round;opacity:.9}
+  .ray{stroke:var(--blue);stroke-width:10;stroke-linecap:round}
+  .hit-ray{stroke:transparent;stroke-width:44;cursor:grab}
+  .hit-ray:active{cursor:grabbing}
+  .arrow{fill:var(--blue);pointer-events:none}
+  .angle-arc{fill:none;stroke:var(--red);stroke-width:8;stroke-linecap:round}
+  .angle-value{font-size:34px;font-weight:700;fill:var(--red);text-anchor:middle;dominant-baseline:middle;paint-order:stroke;stroke:var(--panel);stroke-width:7px;stroke-linejoin:round}
+  .angle-name{font-size:21px;font-weight:700;fill:var(--ink);text-anchor:middle;dominant-baseline:middle;paint-order:stroke;stroke:var(--panel);stroke-width:6px}
+  .center{fill:var(--blue);stroke:var(--paper);stroke-width:6}
+  .handle{fill:var(--blue);stroke:var(--paper);stroke-width:5;cursor:grab}
+  .handle:active{cursor:grabbing}
+  .handle-ring{fill:transparent;stroke:transparent;stroke-width:30;cursor:grab}
+  .footer{display:flex;justify-content:center;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
+  button{appearance:none;border:1px solid #cbd5e1;border-radius:9px;background:#fff;color:var(--ink);font:inherit;font-weight:700;padding:10px 16px;cursor:pointer}
+  button:hover{background:#f1f5f9}
+  #summary{font-size:18px;font-weight:700;min-width:300px;text-align:center}
+  @media(max-width:600px){body{padding:8px}.board{border-width:2px}.angle-value{font-size:28px}.angle-name{font-size:19px}.ray{stroke-width:8}}
+</style>
+</head>
+<body>
+<main>
+  <h1>Interactive Vertical Angles</h1>
+  <p class="hint">Drag any blue arrow handle. Opposite angles remain congruent.</p>
+  <div class="board">
+    <svg id="diagram" viewBox="0 0 900 675" role="img" aria-labelledby="svgTitle svgDesc">
+      <title id="svgTitle">Movable intersecting lines and vertical angles</title>
+      <desc id="svgDesc">A fixed black horizontal reference line passes through two movable blue intersecting lines. Drag a blue handle to change the four angle measures.</desc>
+      <line class="horizon" x1="70" y1="337.5" x2="830" y2="337.5"></line>
+      <g id="lines"></g>
+      <g id="arcs"></g>
+      <g id="labels"></g>
+      <circle class="center" cx="450" cy="337.5" r="13"></circle>
+      <g id="handles"></g>
+    </svg>
+  </div>
+  <div class="footer">
+    <button id="reset" type="button">Reset</button>
+    <button id="random" type="button">Random position</button>
+    <div id="summary" aria-live="polite"></div>
+  </div>
+</main>
+<script>
+(function(){
+  'use strict';
+  var svg=document.getElementById('diagram');
+  var lineLayer=document.getElementById('lines');
+  var arcLayer=document.getElementById('arcs');
+  var labelLayer=document.getElementById('labels');
+  var handleLayer=document.getElementById('handles');
+  var summary=document.getElementById('summary');
+  var NS='http://www.w3.org/2000/svg';
+  var cx=450,cy=337.5,length=330;
+  var angles=[60,120];
+  var activeLine=null;
+
+  function el(name,attrs,text){
+    var node=document.createElementNS(NS,name),key;
+    for(key in attrs){node.setAttribute(key,attrs[key]);}
+    if(text!==undefined){node.textContent=text;}
+    return node;
+  }
+  function norm(a){a%=360;return a<0?a+360:a;}
+  function point(angle,r){var rad=angle*Math.PI/180;return{x:cx+r*Math.cos(rad),y:cy-r*Math.sin(rad)};}
+  function smallestGap(a,b){var d=norm(b-a);return d>180?360-d:d;}
+  function arcPath(start,end,r){
+    var delta=norm(end-start),p1=point(start,r),p2=point(end,r);
+    return 'M '+p1.x+' '+p1.y+' A '+r+' '+r+' 0 '+(delta>180?1:0)+' 0 '+p2.x+' '+p2.y;
+  }
+  function clear(node){while(node.firstChild){node.removeChild(node.firstChild);}}
+  function drawArrow(angle,lineIndex,endIndex){
+    var tip=point(angle,length),back=point(angle,length-26),side=12,rad=angle*Math.PI/180;
+    var px=Math.sin(rad)*side,py=Math.cos(rad)*side;
+    var polygon=el('polygon',{class:'arrow',points:tip.x+','+tip.y+' '+(back.x+px)+','+(back.y+py)+' '+(back.x-px)+','+(back.y-py)});
+    lineLayer.appendChild(polygon);
+    var hit=el('line',{class:'hit-ray',x1:cx,y1:cy,x2:tip.x,y2:tip.y,'data-line':lineIndex,'data-end':endIndex});
+    lineLayer.appendChild(hit);
+  }
+  function drawLine(angle,index){
+    var p1=point(angle,length),p2=point(angle+180,length);
+    lineLayer.appendChild(el('line',{class:'ray',x1:p1.x,y1:p1.y,x2:p2.x,y2:p2.y}));
+    drawArrow(angle,index,0);drawArrow(angle+180,index,1);
+    [angle,angle+180].forEach(function(a,endIndex){
+      var p=point(a,length-2);
+      handleLayer.appendChild(el('circle',{class:'handle-ring',cx:p.x,cy:p.y,r:24,'data-line':index,'data-end':endIndex}));
+      handleLayer.appendChild(el('circle',{class:'handle',cx:p.x,cy:p.y,r:11,'data-line':index,'data-end':endIndex}));
+    });
+  }
+  function classify(value){if(value<90)return'acute';if(value===90)return'right';if(value<180)return'obtuse';return'straight';}
+  function render(){
+    clear(lineLayer);clear(arcLayer);clear(labelLayer);clear(handleLayer);
+    drawLine(angles[0],0);drawLine(angles[1],1);
+    var rays=[norm(angles[0]),norm(angles[1]),norm(angles[0]+180),norm(angles[1]+180)].sort(function(a,b){return a-b;});
+    for(var i=0;i<4;i++){
+      var start=rays[i],end=(i===3?rays[0]+360:rays[i+1]),value=Math.round(end-start),mid=start+value/2;
+      arcLayer.appendChild(el('path',{class:'angle-arc',d:arcPath(start,end,70)}));
+      var lp=point(mid,92),np=point(mid,174);
+      labelLayer.appendChild(el('text',{class:'angle-value',x:lp.x,y:lp.y},value+'°'));
+      labelLayer.appendChild(el('text',{class:'angle-name',x:np.x,y:np.y},classify(value)+' angle'));
+    }
+    var small=Math.round(smallestGap(angles[0],angles[1])),large=180-small;
+    summary.textContent='Two angles measure '+small+'° · Two angles measure '+large+'°';
+  }
+  function svgPoint(evt){
+    var rect=svg.getBoundingClientRect();
+    return{x:(evt.clientX-rect.left)*900/rect.width,y:(evt.clientY-rect.top)*675/rect.height};
+  }
+  function move(evt){
+    if(activeLine===null)return;
+    var p=svgPoint(evt),angle=norm(Math.atan2(cy-p.y,p.x-cx)*180/Math.PI);
+    angles[activeLine.index]=norm(angle-(activeLine.end===1?180:0));
+    render();evt.preventDefault();
+  }
+  svg.addEventListener('pointerdown',function(evt){
+    var target=evt.target;
+    if(target.hasAttribute('data-line')){
+      activeLine={index:Number(target.getAttribute('data-line')),end:Number(target.getAttribute('data-end'))};
+      svg.setPointerCapture(evt.pointerId);move(evt);
+    }
+  });
+  svg.addEventListener('pointermove',move);
+  svg.addEventListener('pointerup',function(evt){activeLine=null;if(svg.hasPointerCapture(evt.pointerId))svg.releasePointerCapture(evt.pointerId);});
+  svg.addEventListener('pointercancel',function(){activeLine=null;});
+  document.getElementById('reset').addEventListener('click',function(){angles=[60,120];render();});
+  document.getElementById('random').addEventListener('click',function(){var base=Math.floor(Math.random()*180),gap=Math.floor(Math.random()*106)+30;angles=[base,norm(base+gap)];render();});
+  render();
+})();
+</script>
+</body>
+</html>
