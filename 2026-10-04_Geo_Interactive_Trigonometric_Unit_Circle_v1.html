@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trigonometric Unit Circle</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- KaTeX for crisp LaTeX Math Rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <!-- Fonts & FontAwesome Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+        .mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        /* Enforce single-color dark monochrome text for all text and LaTeX elements */
+        *, .katex, .katex-display {
+            color: #1e293b !important;
+        }
+        .app-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.05), 0 8px 10px -6px rgba(15, 23, 42, 0.03);
+        }
+        /* Custom range slider styling */
+        input[type=range] {
+            accent-color: #0f172a;
+        }
+        .katex {
+            font-size: 1.35rem !important;
+            font-weight: 600;
+        }
+        @media (max-width: 640px) {
+            .katex { font-size: 1.15rem !important; }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-between p-3 sm:p-6 bg-slate-50">
+
+    <!-- Header -->
+    <header class="text-center my-3 sm:my-5">
+        <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight text-slate-800 mb-2">
+            Trigonometric Unit Circle
+        </h1>
+        <p class="text-slate-600 text-sm sm:text-base font-medium max-w-lg mx-auto">
+            Interactive visual explorer for sine, cosine, and standard angles
+        </p>
+    </header>
+
+    <!-- Main Interactive Visualizer Container -->
+    <main class="w-full max-w-4xl flex flex-col items-center justify-center my-auto gap-4">
+        
+        <!-- Canvas Card -->
+        <div class="w-full max-w-[560px] aspect-square app-card rounded-3xl p-3 flex items-center justify-center relative shadow-xl">
+            <canvas id="unitCircleCanvas" class="w-full h-full cursor-grab active:cursor-grabbing touch-none rounded-2xl"></canvas>
+            
+            <!-- Canvas Legend / Overlay Badge -->
+            <div class="absolute top-5 left-5 bg-white/90 backdrop-blur border border-slate-200 px-3 py-1.5 rounded-full shadow-sm flex items-center gap-3 text-xs font-semibold">
+                <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span> Sine</span>
+                <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-amber-500 inline-block"></span> Cosine</span>
+                <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-rose-500 inline-block"></span> Needle</span>
+            </div>
+        </div>
+
+        <!-- Trigonometric Values & Equations Display Card -->
+        <div class="w-full max-w-2xl app-card rounded-2xl p-4 sm:p-6 flex flex-col items-center gap-4">
+            
+            <!-- Live Angle Readout -->
+            <div class="flex items-center justify-center text-center">
+                <div id="angleEquation" class="text-xl sm:text-2xl font-bold py-1 px-4 rounded-xl bg-slate-100 border border-slate-200">
+                    <!-- KaTeX Angle rendered here -->
+                </div>
+            </div>
+
+            <!-- Sine and Cosine Equations Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full pt-3 border-t border-slate-200">
+                <!-- Cosine Card -->
+                <div class="flex flex-col items-center justify-center p-3 rounded-xl bg-amber-50/60 border border-amber-200">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Horizontal Axis (Cosine)</span>
+                    <div id="cosEquation" class="py-1"></div>
+                </div>
+
+                <!-- Sine Card -->
+                <div class="flex flex-col items-center justify-center p-3 rounded-xl bg-emerald-50/60 border border-emerald-200">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Vertical Axis (Sine)</span>
+                    <div id="sinEquation" class="py-1"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Interactive Controls Card -->
+        <div class="w-full max-w-2xl app-card rounded-2xl p-4 sm:p-5 flex flex-col gap-4">
+            
+            <!-- Angle Scrub Slider -->
+            <div class="flex items-center gap-3 w-full">
+                <span class="text-xs font-bold text-slate-700 w-24">Angle Scrub:</span>
+                <input type="range" id="angleSlider" min="0" max="360" step="0.5" value="315"
+                       class="w-full h-2.5 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+                <span id="sliderValue" class="mono text-xs text-slate-800 font-extrabold w-16 text-right">315.0°</span>
+            </div>
+
+            <!-- Action Controls Row -->
+            <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-200">
+                
+                <!-- Playback & Snap Buttons -->
+                <div class="flex items-center gap-2 flex-wrap">
+                    <button id="playBtn" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-sm font-semibold transition flex items-center gap-2 shadow-md">
+                        <i class="fa-solid fa-pause text-xs" id="playIcon"></i>
+                        <span id="playText">Pause</span>
+                    </button>
+
+                    <button id="dirBtn" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-800 rounded-xl text-sm font-semibold transition flex items-center gap-2">
+                        <i class="fa-solid fa-rotate-left text-xs" id="dirIcon"></i>
+                        <span id="dirText" class="hidden sm:inline">Counter-Clockwise</span>
+                    </button>
+
+                    <button id="snapBtn" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-800 rounded-xl text-sm font-semibold transition flex items-center gap-2" title="Snap to nearest standard angle">
+                        <i class="fa-solid fa-magnet text-xs"></i>
+                        <span>Snap Angle</span>
+                    </button>
+                </div>
+
+                <!-- Speed & Mode Controls -->
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-2">
+                        <label for="speedSlider" class="text-xs font-bold text-slate-700">Speed:</label>
+                        <input type="range" id="speedSlider" min="0.1" max="2.0" step="0.1" value="0.5" class="w-20 h-2 bg-slate-200 rounded-lg appearance-none">
+                    </div>
+
+                    <button id="formatToggleBtn" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-xs font-bold text-slate-800 rounded-xl transition">
+                        Format: <span id="formatText">Exact</span>
+                    </button>
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-6 mb-2 text-center text-xs font-semibold text-slate-500">
+        Trigonometric Unit Circle • Pure Light Theme • Monochromatic English Notation
+    </footer>
+
+    <script>
+        // Application State Management
+        const state = {
+            angleDeg: 315, // Degrees (0° to 360°)
+            isPlaying: true,
+            isCounterClockwise: true,
+            speed: 0.5,
+            showExactFractions: true,
+            isDragging: false
+        };
+
+        // Standard Unit Circle Angle Expressions
+        const standardAngles = [
+            { deg: 0, rad: "0", radTex: "0", cosTex: "1", sinTex: "0", cosVal: 1, sinVal: 0 },
+            { deg: 30, rad: "π/6", radTex: "\\frac{\\pi}{6}", cosTex: "\\frac{\\sqrt{3}}{2}", sinTex: "\\frac{1}{2}", cosVal: Math.sqrt(3)/2, sinVal: 0.5 },
+            { deg: 45, rad: "π/4", radTex: "\\frac{\\pi}{4}", cosTex: "\\frac{\\sqrt{2}}{2}", sinTex: "\\frac{\\sqrt{2}}{2}", cosVal: Math.SQRT1_2, sinVal: Math.SQRT1_2 },
+            { deg: 60, rad: "π/3", radTex: "\\frac{\\pi}{3}", cosTex: "\\frac{1}{2}", sinTex: "\\frac{\\sqrt{3}}{2}", cosVal: 0.5, sinVal: Math.sqrt(3)/2 },
+            { deg: 90, rad: "π/2", radTex: "\\frac{\\pi}{2}", cosTex: "0", sinTex: "1", cosVal: 0, sinVal: 1 },
+            { deg: 120, rad: "2π/3", radTex: "\\frac{2\\pi}{3}", cosTex: "-\\frac{1}{2}", sinTex: "\\frac{\\sqrt{3}}{2}", cosVal: -0.5, sinVal: Math.sqrt(3)/2 },
+            { deg: 135, rad: "3π/4", radTex: "\\frac{3\\pi}{4}", cosTex: "-\\frac{\\sqrt{2}}{2}", sinTex: "\\frac{\\sqrt{2}}{2}", cosVal: -Math.SQRT1_2, sinVal: Math.SQRT1_2 },
+            { deg: 150, rad: "5π/6", radTex: "\\frac{5\\pi}{6}", cosTex: "-\\frac{\\sqrt{3}}{2}", sinTex: "\\frac{1}{2}", cosVal: -Math.sqrt(3)/2, sinVal: 0.5 },
+            { deg: 180, rad: "π", radTex: "\\pi", cosTex: "-1", sinTex: "0", cosVal: -1, sinVal: 0 },
+            { deg: 210, rad: "7π/6", radTex: "\\frac{7\\pi}{6}", cosTex: "-\\frac{\\sqrt{3}}{2}", sinTex: "-\\frac{1}{2}", cosVal: -Math.sqrt(3)/2, sinVal: -0.5 },
+            { deg: 225, rad: "5π/4", radTex: "\\frac{5\\pi}{4}", cosTex: "-\\frac{\\sqrt{2}}{2}", sinTex: "-\\frac{\\sqrt{2}}{2}", cosVal: -Math.SQRT1_2, sinVal: -Math.SQRT1_2 },
+            { deg: 240, rad: "4π/3", radTex: "\\frac{4\\pi}{3}", cosTex: "-\\frac{1}{2}", sinTex: "-\\frac{\\sqrt{3}}{2}", cosVal: -0.5, sinVal: -Math.sqrt(3)/2 },
+            { deg: 270, rad: "3π/2", radTex: "\\frac{3\\pi}{2}", cosTex: "0", sinTex: "-1", cosVal: 0, sinVal: -1 },
+            { deg: 300, rad: "5π/3", radTex: "\\frac{5\\pi}{3}", cosTex: "\\frac{1}{2}", sinTex: "-\\frac{\\sqrt{3}}{2}", cosVal: 0.5, sinVal: -Math.sqrt(3)/2 },
+            { deg: 315, rad: "7π/4", radTex: "\\frac{7\\pi}{4}", cosTex: "\\frac{\\sqrt{2}}{2}", sinTex: "-\\frac{\\sqrt{2}}{2}", cosVal: Math.SQRT1_2, sinVal: -Math.SQRT1_2 },
+            { deg: 330, rad: "11π/6", radTex: "\\frac{11\\pi}{6}", cosTex: "\\frac{\\sqrt{3}}{2}", sinTex: "-\\frac{1}{2}", cosVal: Math.sqrt(3)/2, sinVal: -0.5 },
+            { deg: 360, rad: "2π", radTex: "2\\pi", cosTex: "1", sinTex: "0", cosVal: 1, sinVal: 0 }
+        ];
+
+        const canvas = document.getElementById('unitCircleCanvas');
+        const ctx = canvas.getContext('2d');
+        let width, height, centerX, centerY, radius;
+
+        function resizeCanvas() {
+            const rect = canvas.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            
+            width = canvas.width;
+            height = canvas.height;
+            centerX = width / 2;
+            centerY = height / 2;
+            radius = Math.min(width, height) * 0.37;
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+
+        function drawCircle() {
+            ctx.clearRect(0, 0, width, height);
+
+            const rad = (state.angleDeg * Math.PI) / 180;
+            const cosVal = Math.cos(rad);
+            const sinVal = Math.sin(rad);
+
+            // Coordinates on canvas
+            const tipX = centerX + radius * cosVal;
+            const tipY = centerY - radius * sinVal;
+
+            // 1. Draw Outer Unit Circle (Thick vibrant Indigo stroke)
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+            ctx.strokeStyle = '#4338ca'; // Thick indigo blue
+            ctx.lineWidth = 4;
+            ctx.stroke();
+
+            // 2. Main Axes (X & Y Axis in crisp mid-gray stroke)
+            ctx.beginPath();
+            ctx.moveTo(centerX - radius * 1.15, centerY);
+            ctx.lineTo(centerX + radius * 1.15, centerY);
+            ctx.moveTo(centerX, centerY - radius * 1.15);
+            ctx.lineTo(centerX, centerY + radius * 1.15);
+            ctx.strokeStyle = '#94a3b8'; // Slate 400
+            ctx.lineWidth = 2.5;
+            ctx.stroke();
+
+            // Axis labels (-1, 1 markers on standard points)
+            ctx.font = `600 ${Math.max(11, Math.floor(radius * 0.065))}px Outfit, sans-serif`;
+            ctx.fillStyle = '#1e293b';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            ctx.fillText('1', centerX + radius + 14, centerY + 14);
+            ctx.fillText('-1', centerX - radius - 14, centerY + 14);
+            ctx.fillText('1', centerX - 14, centerY - radius - 12);
+            ctx.fillText('-1', centerX - 16, centerY + radius + 14);
+
+            // 3. Shaded Angle Sector Wedge Fill (Translucent amber/coral fill)
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.arc(centerX, centerY, radius * 0.28, 0, -rad, true);
+            ctx.closePath();
+            ctx.fillStyle = 'rgba(245, 158, 11, 0.25)';
+            ctx.fill();
+
+            // Arc outline
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius * 0.28, 0, -rad, true);
+            ctx.strokeStyle = '#d97706';
+            ctx.lineWidth = 2.5;
+            ctx.stroke();
+
+            // 4. Standard Angle Tick Points & Monochrome Text Labels
+            standardAngles.forEach(item => {
+                if (item.deg === 360) return;
+                const itemRad = (item.deg * Math.PI) / 180;
+                const tickCos = Math.cos(itemRad);
+                const tickSin = Math.sin(itemRad);
+
+                // Tick Dot
+                const dotX = centerX + radius * tickCos;
+                const dotY = centerY - radius * tickSin;
+
+                ctx.beginPath();
+                ctx.arc(dotX, dotY, 4, 0, Math.PI * 2);
+                ctx.fillStyle = '#06b6d4'; // Cyan tick dot
+                ctx.fill();
+
+                // Radian Text Label Outside Circle
+                const labelDist = radius * 1.18;
+                const labelX = centerX + labelDist * tickCos;
+                const labelY = centerY - labelDist * tickSin;
+
+                ctx.font = `700 ${Math.max(11, Math.floor(radius * 0.075))}px Outfit, sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillStyle = '#1e293b'; // Strict dark monochrome
+                ctx.fillText(item.rad, labelX, labelY);
+
+                // Degree Label Inside Circle
+                const degDist = radius * 0.81;
+                const degX = centerX + degDist * tickCos;
+                const degY = centerY - degDist * tickSin;
+
+                ctx.font = `600 ${Math.max(9, Math.floor(radius * 0.055))}px Outfit, sans-serif`;
+                ctx.fillStyle = '#475569';
+                ctx.fillText(`${item.deg}°`, degX, degY);
+            });
+
+            // 5. Cosine Vector Segment (X-axis Amber/Orange Line)
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.lineTo(tipX, centerY);
+            ctx.strokeStyle = '#f59e0b'; // Vibrant amber
+            ctx.lineWidth = 6;
+            ctx.lineCap = 'round';
+            ctx.stroke();
+
+            // 6. Sine Vector Segment (Vertical Emerald Green Line)
+            ctx.beginPath();
+            ctx.moveTo(tipX, centerY);
+            ctx.lineTo(tipX, tipY);
+            ctx.strokeStyle = '#10b981'; // Vibrant emerald green
+            ctx.lineWidth = 6;
+            ctx.lineCap = 'round';
+            ctx.stroke();
+
+            // 7. Rotating Radius Vector / Needle (Bold Rose/Red Line)
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.lineTo(tipX, tipY);
+            ctx.strokeStyle = '#f43f5e'; // Vibrant rose red
+            ctx.lineWidth = 6;
+            ctx.lineCap = 'round';
+            ctx.stroke();
+
+            // Center origin pivot dot
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 5, 0, Math.PI * 2);
+            ctx.fillStyle = '#1e293b';
+            ctx.fill();
+
+            // Needle Head Point Knob
+            ctx.beginPath();
+            ctx.arc(tipX, tipY, 11, 0, Math.PI * 2);
+            ctx.fillStyle = '#f43f5e';
+            ctx.fill();
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+        }
+
+        function updateEquations() {
+            // Find standard angle match within 0.5 degrees
+            const matched = standardAngles.find(a => Math.abs(a.deg - (state.angleDeg % 360)) < 0.5 || Math.abs(a.deg - state.angleDeg) < 0.5);
+
+            const angleRad = (state.angleDeg * Math.PI) / 180;
+            const cosVal = Math.cos(angleRad);
+            const sinVal = Math.sin(angleRad);
+
+            // Render Angle Equation
+            let angleTex = `\\theta = ${Math.round(state.angleDeg)}^\\circ`;
+            if (matched) {
+                angleTex += ` = ${matched.radTex}`;
+            }
+            katex.render(angleTex, document.getElementById('angleEquation'), { throwOnError: false });
+
+            // Render Sine Equation
+            let sinTex = '';
+            if (state.showExactFractions && matched) {
+                sinTex = `\\sin\\theta = ${matched.sinTex}`;
+            } else {
+                sinTex = `\\sin\\theta = ${sinVal.toFixed(3)}`;
+            }
+            katex.render(sinTex, document.getElementById('sinEquation'), { throwOnError: false });
+
+            // Render Cosine Equation
+            let cosTex = '';
+            if (state.showExactFractions && matched) {
+                cosTex = `\\cos\\theta = ${matched.cosTex}`;
+            } else {
+                cosTex = `\\cos\\theta = ${cosVal.toFixed(3)}`;
+            }
+            katex.render(cosTex, document.getElementById('cosEquation'), { throwOnError: false });
+        }
+
+        const angleSlider = document.getElementById('angleSlider');
+        const sliderValue = document.getElementById('sliderValue');
+        const playBtn = document.getElementById('playBtn');
+        const playIcon = document.getElementById('playIcon');
+        const playText = document.getElementById('playText');
+        const dirBtn = document.getElementById('dirBtn');
+        const dirIcon = document.getElementById('dirIcon');
+        const dirText = document.getElementById('dirText');
+        const speedSlider = document.getElementById('speedSlider');
+        const snapBtn = document.getElementById('snapBtn');
+        const formatToggleBtn = document.getElementById('formatToggleBtn');
+        const formatText = document.getElementById('formatText');
+
+        angleSlider.addEventListener('input', (e) => {
+            state.angleDeg = parseFloat(e.target.value);
+            sliderValue.textContent = `${state.angleDeg.toFixed(1)}°`;
+            if (state.isPlaying) togglePlay(false);
+            render();
+        });
+
+        function togglePlay(play) {
+            state.isPlaying = play !== undefined ? play : !state.isPlaying;
+            if (state.isPlaying) {
+                playIcon.className = "fa-solid fa-pause text-xs";
+                playText.textContent = "Pause";
+            } else {
+                playIcon.className = "fa-solid fa-play text-xs";
+                playText.textContent = "Play";
+            }
+        }
+
+        playBtn.addEventListener('click', () => togglePlay());
+
+        dirBtn.addEventListener('click', () => {
+            state.isCounterClockwise = !state.isCounterClockwise;
+            if (state.isCounterClockwise) {
+                dirIcon.className = "fa-solid fa-rotate-left text-xs";
+                dirText.textContent = "Counter-Clockwise";
+            } else {
+                dirIcon.className = "fa-solid fa-rotate-right text-xs";
+                dirText.textContent = "Clockwise";
+            }
+        });
+
+        speedSlider.addEventListener('input', (e) => {
+            state.speed = parseFloat(e.target.value);
+        });
+
+        snapBtn.addEventListener('click', () => {
+            let minDiff = Infinity;
+            let targetDeg = state.angleDeg;
+            standardAngles.forEach(a => {
+                const diff = Math.abs(a.deg - (state.angleDeg % 360));
+                if (diff < minDiff) {
+                    minDiff = diff;
+                    targetDeg = a.deg;
+                }
+            });
+            state.angleDeg = targetDeg;
+            angleSlider.value = state.angleDeg;
+            sliderValue.textContent = `${state.angleDeg.toFixed(1)}°`;
+            render();
+        });
+
+        formatToggleBtn.addEventListener('click', () => {
+            state.showExactFractions = !state.showExactFractions;
+            formatText.textContent = state.showExactFractions ? "Exact" : "Decimal";
+            updateEquations();
+        });
+
+        function handlePointer(e) {
+            const rect = canvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+            const dx = clientX - (rect.left + rect.width / 2);
+            const dy = (rect.top + rect.height / 2) - clientY;
+
+            let angle = Math.atan2(dy, dx) * (180 / Math.PI);
+            if (angle < 0) angle += 360;
+
+            state.angleDeg = angle;
+            angleSlider.value = state.angleDeg;
+            sliderValue.textContent = `${state.angleDeg.toFixed(1)}°`;
+            render();
+        }
+
+        canvas.addEventListener('mousedown', (e) => {
+            state.isDragging = true;
+            togglePlay(false);
+            handlePointer(e);
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (state.isDragging) handlePointer(e);
+        });
+
+        window.addEventListener('mouseup', () => {
+            state.isDragging = false;
+        });
+
+        canvas.addEventListener('touchstart', (e) => {
+            state.isDragging = true;
+            togglePlay(false);
+            handlePointer(e);
+        });
+
+        window.addEventListener('touchmove', (e) => {
+            if (state.isDragging) handlePointer(e);
+        });
+
+        window.addEventListener('touchend', () => {
+            state.isDragging = false;
+        });
+
+        function render() {
+            drawCircle();
+            updateEquations();
+        }
+
+        function animate() {
+            if (state.isPlaying && !state.isDragging) {
+                const step = state.speed;
+                if (state.isCounterClockwise) {
+                    state.angleDeg = (state.angleDeg + step) % 360;
+                } else {
+                    state.angleDeg = (state.angleDeg - step + 360) % 360;
+                }
+                angleSlider.value = state.angleDeg;
+                sliderValue.textContent = `${state.angleDeg.toFixed(1)}°`;
+                render();
+            }
+            requestAnimationFrame(animate);
+        }
+
+        window.onload = () => {
+            resizeCanvas();
+            render();
+            animate();
+        };
+    </script>
+</body>
+</html>
