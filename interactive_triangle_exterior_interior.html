@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Triangle Interior & Exterior Angles Explorer</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: #f8fafc;
+            color: #0f172a;
+        }
+        .mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .card-shadow {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.04), 0 8px 10px -6px rgba(15, 23, 42, 0.02);
+        }
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between bg-slate-50 p-3 sm:p-6">
+
+    <!-- Header -->
+    <header class="text-center max-w-4xl mx-auto mb-4">
+        <h1 class="text-2xl sm:text-4xl font-extrabold tracking-tight text-slate-900 mb-1">
+            Triangle Angle Explorer
+        </h1>
+        <p class="text-slate-600 text-xs sm:text-sm font-medium">
+            Drag the vertices or enter angles to explore interior and exterior angle theorems interactively
+        </p>
+    </header>
+
+    <!-- Main Container: 2/3 Canvas + 1/3 Sidebar -->
+    <main class="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-5 items-start my-auto">
+        
+        <!-- LEFT 2/3 COLUMN: Controls, Canvas, Classification -->
+        <div class="lg:col-span-2 flex flex-col gap-4 w-full">
+            
+            <!-- Top Controls Bar -->
+            <div class="card-shadow rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-2 sm:gap-4 flex-wrap">
+                    
+                    <!-- Angle A Input -->
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-3 h-3 rounded-full bg-blue-500 inline-block"></span>
+                        <label class="text-xs font-bold text-slate-700">Angle A</label>
+                        <div class="relative flex items-center">
+                            <input type="number" id="inputA" min="10" max="160" value="60"
+                                   class="w-16 px-2 py-1 text-center font-bold text-slate-800 bg-slate-100 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <span class="text-xs font-bold text-slate-500 ml-1">°</span>
+                        </div>
+                    </div>
+
+                    <!-- Angle B Input -->
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-3 h-3 rounded-full bg-pink-500 inline-block"></span>
+                        <label class="text-xs font-bold text-slate-700">Angle B</label>
+                        <div class="relative flex items-center">
+                            <input type="number" id="inputB" min="10" max="160" value="60"
+                                   class="w-16 px-2 py-1 text-center font-bold text-slate-800 bg-slate-100 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-pink-500">
+                            <span class="text-xs font-bold text-slate-500 ml-1">°</span>
+                        </div>
+                    </div>
+
+                    <!-- Angle C Input -->
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span>
+                        <label class="text-xs font-bold text-slate-700">Angle C</label>
+                        <div class="relative flex items-center">
+                            <input type="number" id="inputC" min="10" max="160" value="60"
+                                   class="w-16 px-2 py-1 text-center font-bold text-slate-800 bg-slate-100 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <span class="text-xs font-bold text-slate-500 ml-1">°</span>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Action Buttons & Sum Indicator -->
+                <div class="flex items-center gap-2 flex-wrap">
+                    <span class="text-xs font-bold px-2.5 py-1 bg-slate-100 border border-slate-200 text-slate-600 rounded-lg mr-1">Angle sum: 180°</span>
+                    <button id="btnDraw" class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                        <i class="fa-solid fa-pen-ruler text-xs"></i>
+                        <span>Draw</span>
+                    </button>
+                    <button id="btnEquilateral" class="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-shapes text-xs"></i>
+                        <span>Equilateral</span>
+                    </button>
+                    <button id="btnRandom" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-800 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-shuffle text-xs"></i>
+                        <span>Random</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Canvas Card -->
+            <div class="card-shadow rounded-2xl p-3 relative flex flex-col items-center justify-center min-h-[440px] sm:min-h-[500px]">
+                <canvas id="triangleCanvas" class="w-full h-[420px] sm:h-[480px] cursor-grab active:cursor-grabbing touch-none rounded-xl"></canvas>
+
+                <!-- Toggle Controls Overlay on Canvas -->
+                <div class="absolute top-5 right-5 flex items-center gap-2 bg-white/90 backdrop-blur border border-slate-200 px-3 py-1.5 rounded-full text-xs font-bold shadow-sm">
+                    <input type="checkbox" id="toggleExterior" checked class="accent-slate-800 cursor-pointer w-4 h-4">
+                    <label for="toggleExterior" class="cursor-pointer text-slate-700">Show Exterior Angles</label>
+                </div>
+            </div>
+
+            <!-- Triangle Classification Card -->
+            <div class="card-shadow rounded-2xl p-4 text-center">
+                <div class="text-base sm:text-xl font-bold text-slate-800">
+                    <span id="labelSideType">Equilateral triangle</span>
+                    <span class="text-slate-400 mx-2">•</span>
+                    <span id="labelAngleType">Acute triangle</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT 1/3 COLUMN: Interior & Exterior Value Displays -->
+        <div class="lg:col-span-1 flex flex-col gap-4 w-full">
+            
+            <!-- Interior Angles Card (Top Box) -->
+            <div class="card-shadow rounded-2xl p-5 flex flex-col gap-4">
+                <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+                    <h2 class="text-base font-extrabold text-slate-900 flex items-center gap-2">
+                        <i class="fa-solid fa-vector-square text-blue-500"></i>
+                        Interior Angles
+                    </h2>
+                    <span class="text-xs font-bold px-2.5 py-1 bg-blue-50 text-blue-700 rounded-full border border-blue-200">Sum = 180°</span>
+                </div>
+
+                <div class="grid grid-cols-3 gap-2 text-center">
+                    <!-- Angle A -->
+                    <div class="p-2.5 rounded-xl bg-blue-50/70 border border-blue-200 flex flex-col items-center">
+                        <span class="text-xs font-extrabold text-blue-600 mb-0.5">Angle A</span>
+                        <span id="valIntA" class="mono text-lg font-black text-slate-900">60°</span>
+                    </div>
+                    <!-- Angle B -->
+                    <div class="p-2.5 rounded-xl bg-pink-50/70 border border-pink-200 flex flex-col items-center">
+                        <span class="text-xs font-extrabold text-pink-600 mb-0.5">Angle B</span>
+                        <span id="valIntB" class="mono text-lg font-black text-slate-900">60°</span>
+                    </div>
+                    <!-- Angle C -->
+                    <div class="p-2.5 rounded-xl bg-emerald-50/70 border border-emerald-200 flex flex-col items-center">
+                        <span class="text-xs font-extrabold text-emerald-600 mb-0.5">Angle C</span>
+                        <span id="valIntC" class="mono text-lg font-black text-slate-900">60°</span>
+                    </div>
+                </div>
+
+                <!-- Formula equation box -->
+                <div class="bg-slate-100/80 border border-slate-200 rounded-xl p-3 text-center">
+                    <span class="text-xs font-bold text-slate-500 block mb-1">Interior Angle Sum Formula</span>
+                    <span id="eqInterior" class="mono text-sm font-extrabold text-slate-800">
+                        60° + 60° + 60° = 180°
+                    </span>
+                </div>
+            </div>
+
+            <!-- Exterior Angles Card (Bottom Box) -->
+            <div class="card-shadow rounded-2xl p-5 flex flex-col gap-4">
+                <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+                    <h2 class="text-base font-extrabold text-slate-900 flex items-center gap-2">
+                        <i class="fa-solid fa-circle-nodes text-purple-500"></i>
+                        Exterior Angles
+                    </h2>
+                    <span class="text-xs font-bold px-2.5 py-1 bg-purple-50 text-purple-700 rounded-full border border-purple-200">Sum = 360°</span>
+                </div>
+
+                <div class="grid grid-cols-3 gap-2 text-center">
+                    <!-- Ext Angle A -->
+                    <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 flex flex-col items-center">
+                        <span class="text-xs font-extrabold text-blue-600 mb-0.5">Ext A</span>
+                        <span id="valExtA" class="mono text-lg font-black text-slate-900">120°</span>
+                        <span class="text-[10px] text-slate-400 font-semibold">180° - A</span>
+                    </div>
+                    <!-- Ext Angle B -->
+                    <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 flex flex-col items-center">
+                        <span class="text-xs font-extrabold text-pink-600 mb-0.5">Ext B</span>
+                        <span id="valExtB" class="mono text-lg font-black text-slate-900">120°</span>
+                        <span class="text-[10px] text-slate-400 font-semibold">180° - B</span>
+                    </div>
+                    <!-- Ext Angle C -->
+                    <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 flex flex-col items-center">
+                        <span class="text-xs font-extrabold text-emerald-600 mb-0.5">Ext C</span>
+                        <span id="valExtC" class="mono text-lg font-black text-slate-900">120°</span>
+                        <span class="text-[10px] text-slate-400 font-semibold">180° - C</span>
+                    </div>
+                </div>
+
+                <!-- Formula equation box -->
+                <div class="bg-slate-100/80 border border-slate-200 rounded-xl p-3 text-center">
+                    <span class="text-xs font-bold text-slate-500 block mb-1">Exterior Angle Sum Formula</span>
+                    <span id="eqExterior" class="mono text-sm font-extrabold text-slate-800">
+                        120° + 120° + 120° = 360°
+                    </span>
+                </div>
+            </div>
+
+            <!-- Exterior Angles Card (Bottom Box) -->
+            <div class="card-shadow rounded-2xl p-5 flex flex-col gap-4">
+                <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+                    <h2 class="text-base font-extrabold text-slate-900 flex items-center gap-2">
+                        <i class="fa-solid fa-circle-nodes text-purple-500"></i>
+                        Exterior Angles
+                    </h2>
+                    <span class="text-xs font-bold px-2.5 py-1 bg-purple-50 text-purple-700 rounded-full border border-purple-200">Sum = 360°</span>
+                </div>
+
+                <div class="grid grid-cols-3 gap-2 text-center">
+                    <!-- Ext Angle A -->
+                    <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 flex flex-col items-center">
+                        <span class="text-xs font-extrabold text-blue-600 mb-0.5">Ext A</span>
+                        <span id="valExtA" class="mono text-lg font-black text-slate-900">120°</span>
+                        <span class="text-[10px] text-slate-400 font-semibold">180° - A</span>
+                    </div>
+                    <!-- Ext Angle B -->
+                    <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 flex flex-col items-center">
+                        <span class="text-xs font-extrabold text-pink-600 mb-0.5">Ext B</span>
+                        <span id="valExtB" class="mono text-lg font-black text-slate-900">119°</span>
+                        <span class="text-[10px] text-slate-400 font-semibold">180° - B</span>
+                    </div>
+                    <!-- Ext Angle C -->
+                    <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 flex flex-col items-center">
+                        <span class="text-xs font-extrabold text-emerald-600 mb-0.5">Ext C</span>
+                        <span id="valExtC" class="mono text-lg font-black text-slate-900">121°</span>
+                        <span class="text-[10px] text-slate-400 font-semibold">180° - C</span>
+                    </div>
+                </div>
+
+                <!-- Formula equation box -->
+                <div class="bg-slate-100/80 border border-slate-200 rounded-xl p-3 text-center">
+                    <span class="text-xs font-bold text-slate-500 block mb-1">Exterior Angle Sum Formula</span>
+                    <span id="eqExterior" class="mono text-sm font-extrabold text-slate-800">
+                        120° + 119° + 121° = 360°
+                    </span>
+                </div>
+            </div>
+
+            <!-- Educational Note Box -->
+            <div class="card-shadow rounded-2xl p-4 bg-amber-50/50 border-amber-200/80 flex gap-3 items-start">
+                <i class="fa-solid fa-lightbulb text-amber-500 text-lg mt-0.5"></i>
+                <div class="text-xs text-amber-900 leading-relaxed font-medium">
+                    <strong>Geometric Rule:</strong> Each exterior angle and its adjacent interior angle form a linear pair and sum to <strong>180°</strong>. The sum of all exterior angles of any triangle is always <strong>360°</strong>.
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-6 text-center text-xs font-semibold text-slate-400">
+        Interactive Geometry Canvas • Dynamic Internal & External Angle Explorer
+    </footer>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // State Management
+        const state = {
+            // Triangle Vertices (Canvas Coordinates)
+            vertices: {
+                A: { x: 180, y: 360, label: 'A', color: '#3b82f6', fill: '#dbeafe' }, // Blue
+                B: { x: 440, y: 360, label: 'B', color: '#ec4899', fill: '#fce7f3' }, // Pink
+                C: { x: 310, y: 134.8, label: 'C', color: '#10b981', fill: '#d1fae5' } // Green (Equilateral top vertex)
+            },
+            angles: { A: 60, B: 60, C: 60 },
+            extAngles: { A: 120, B: 120, C: 120 },
+            sides: { a: 1.0, b: 1.0, c: 1.0 }, // Opposites: a=BC, b=AC, c=AB
+            draggingVertex: null,
+            showExterior: true
+        };
+
+        const canvas = document.getElementById('triangleCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Inputs & UI Elements
+        const inputA = document.getElementById('inputA');
+        const inputB = document.getElementById('inputB');
+        const inputC = document.getElementById('inputC');
+        const btnDraw = document.getElementById('btnDraw');
+        const btnEquilateral = document.getElementById('btnEquilateral');
+        const btnRandom = document.getElementById('btnRandom');
+        const toggleExterior = document.getElementById('toggleExterior');
+
+        const valIntA = document.getElementById('valIntA');
+        const valIntB = document.getElementById('valIntB');
+        const valIntC = document.getElementById('valIntC');
+        const eqInterior = document.getElementById('eqInterior');
+
+        const valExtA = document.getElementById('valExtA');
+        const valExtB = document.getElementById('valExtB');
+        const valExtC = document.getElementById('valExtC');
+        const eqExterior = document.getElementById('eqExterior');
+
+        const labelSideType = document.getElementById('labelSideType');
+        const labelAngleType = document.getElementById('labelAngleType');
+
+        function resizeCanvas() {
+            const rect = canvas.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            ctx.scale(dpr, dpr);
+            render();
+        }
+
+        function getCanvasSize() {
+            const rect = canvas.getBoundingClientRect();
+            return { width: rect.width, height: rect.height };
+        }
+
+        function dist(p1, p2) {
+            return Math.hypot(p2.x - p1.x, p2.y - p1.y);
+        }
+
+        // Calculate interior angles and side lengths from vertex positions
+        function computeGeometry() {
+            const A = state.vertices.A;
+            const B = state.vertices.B;
+            const C = state.vertices.C;
+
+            // Side lengths in canvas pixels
+            const lenC = dist(A, B); // c = AB
+            const lenA = dist(B, C); // a = BC
+            const lenB = dist(C, A); // b = CA
+
+            // Normalize side lengths for display (so standard side is ~1.00)
+            const baseUnit = 250;
+            state.sides.c = Math.round((lenC / baseUnit) * 100) / 100;
+            state.sides.a = Math.round((lenA / baseUnit) * 100) / 100;
+            state.sides.b = Math.round((lenB / baseUnit) * 100) / 100;
+
+            // Law of Cosines for Interior Angles
+            let angA = Math.acos((lenB * lenB + lenC * lenC - lenA * lenA) / (2 * lenB * lenC));
+            let angB = Math.acos((lenA * lenA + lenC * lenC - lenB * lenB) / (2 * lenA * lenC));
+            let angC = Math.acos((lenA * lenA + lenB * lenB - lenC * lenC) / (2 * lenA * lenB));
+
+            // Convert to degrees
+            let degA = Math.round((angA * 180) / Math.PI);
+            let degB = Math.round((angB * 180) / Math.PI);
+            let degC = 180 - degA - degB;
+
+            state.angles.A = Math.max(1, degA);
+            state.angles.B = Math.max(1, degB);
+            state.angles.C = Math.max(1, degC);
+
+            // Exterior angles (180 - Interior)
+            state.extAngles.A = 180 - state.angles.A;
+            state.extAngles.B = 180 - state.angles.B;
+            state.extAngles.C = 180 - state.angles.C;
+
+            updateUI();
+        }
+
+        function render() {
+            const size = getCanvasSize();
+            ctx.clearRect(0, 0, size.width, size.height);
+
+            const A = state.vertices.A;
+            const B = state.vertices.B;
+            const C = state.vertices.C;
+
+            // 1. Draw Exterior Ray Extensions & Exterior Arcs (if enabled)
+            if (state.showExterior) {
+                drawExteriorAngle(A, B, C, state.vertices.A.color, state.extAngles.A, 'A');
+                drawExteriorAngle(B, C, A, state.vertices.B.color, state.extAngles.B, 'B');
+                drawExteriorAngle(C, A, B, state.vertices.C.color, state.extAngles.C, 'C');
+            }
+
+            // 2. Draw Triangle Fill & Thick Edges
+            ctx.beginPath();
+            ctx.moveTo(A.x, A.y);
+            ctx.lineTo(B.x, B.y);
+            ctx.lineTo(C.x, C.y);
+            ctx.closePath();
+            ctx.fillStyle = '#fffbeb'; // Warm cream triangle fill
+            ctx.fill();
+            ctx.strokeStyle = '#1e293b'; // Slate 800 stroke
+            ctx.lineWidth = 4;
+            ctx.lineJoin = 'round';
+            ctx.stroke();
+
+            // 3. Draw Interior Angle Arcs & Degree Text
+            drawInteriorArc(A, B, C, state.vertices.A.color, state.angles.A);
+            drawInteriorArc(B, C, A, state.vertices.B.color, state.angles.B);
+            drawInteriorArc(C, A, B, state.vertices.C.color, state.angles.C);
+
+            // 4. Draw Side Length Labels
+            drawSideLabel(A, B, state.sides.c);
+            drawSideLabel(B, C, state.sides.a);
+            drawSideLabel(C, A, state.sides.b);
+
+            // 5. Draw Draggable Vertex Knobs
+            drawVertex(A);
+            drawVertex(B);
+            drawVertex(C);
+        }
+
+        // Helper to draw vertex knob
+        function drawVertex(v) {
+            ctx.beginPath();
+            ctx.arc(v.x, v.y, 14, 0, Math.PI * 2);
+            ctx.fillStyle = v.color;
+            ctx.fill();
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            // Vertex Text Label (Outside)
+            ctx.font = '800 16px Outfit, sans-serif';
+            ctx.fillStyle = '#0f172a';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            // Offset label direction away from triangle center
+            const center = {
+                x: (state.vertices.A.x + state.vertices.B.x + state.vertices.C.x) / 3,
+                y: (state.vertices.A.y + state.vertices.B.y + state.vertices.C.y) / 3
+            };
+            const dx = v.x - center.x;
+            const dy = v.y - center.y;
+            const distC = Math.hypot(dx, dy) || 1;
+            const labelX = v.x + (dx / distC) * 25;
+            const labelY = v.y + (dy / distC) * 25;
+
+            ctx.fillText(v.label, labelX, labelY);
+        }
+
+        // Helper to draw interior arc and degree readout
+        function drawInteriorArc(V, Vnext, Vprev, color, degValue) {
+            const r = 42; // Arc radius
+            const a1 = Math.atan2(Vprev.y - V.y, Vprev.x - V.x);
+            const a2 = Math.atan2(Vnext.y - V.y, Vnext.x - V.x);
+
+            ctx.beginPath();
+            ctx.moveTo(V.x, V.y);
+            ctx.arc(V.x, V.y, r, a1, a2, isClockwise(Vprev, V, Vnext));
+            ctx.closePath();
+            ctx.fillStyle = color + '25'; // Translucent fill
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.arc(V.x, V.y, r, a1, a2, isClockwise(Vprev, V, Vnext));
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 3.5;
+            ctx.stroke();
+
+            // Interior Angle Text
+            let midAngle = getMidAngle(a1, a2, isClockwise(Vprev, V, Vnext));
+            const textR = r + 22;
+            const textX = V.x + Math.cos(midAngle) * textR;
+            const textY = V.y + Math.sin(midAngle) * textR;
+
+            ctx.font = '700 15px Outfit, sans-serif';
+            ctx.fillStyle = '#0f172a';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(`${degValue}°`, textX, textY);
+        }
+
+        // Helper to draw exterior ray extension and exterior arc
+        function drawExteriorAngle(Vprev, V, Vnext, color, extDegValue, vertexName) {
+            // Extension Ray vector along edge Vprev -> V extended past V
+            const dirX = V.x - Vprev.x;
+            const dirY = V.y - Vprev.y;
+            const len = Math.hypot(dirX, dirY) || 1;
+            const extLen = 70; // Extension line length
+
+            const extX = V.x + (dirX / len) * extLen;
+            const extY = V.y + (dirY / len) * extLen;
+
+            // Draw Dashed Extension Line
+            ctx.beginPath();
+            ctx.setLineDash([5, 4]);
+            ctx.moveTo(V.x, V.y);
+            ctx.lineTo(extX, extY);
+            ctx.strokeStyle = '#64748b'; // Slate 500
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.setLineDash([]); // Reset dash
+
+            // Angles for exterior arc
+            const angExtRay = Math.atan2(extY - V.y, extX - V.x);
+            const angNextRay = Math.atan2(Vnext.y - V.y, Vnext.x - V.x);
+
+            const arcR = 36;
+            const cw = !isClockwise(Vprev, V, Vnext);
+
+            ctx.beginPath();
+            ctx.arc(V.x, V.y, arcR, angExtRay, angNextRay, cw);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2.5;
+            ctx.stroke();
+
+            // Exterior Text Label
+            const midAngle = getMidAngle(angExtRay, angNextRay, cw);
+            const labelR = arcR + 20;
+            const labelX = V.x + Math.cos(midAngle) * labelR;
+            const labelY = V.y + Math.sin(midAngle) * labelR;
+
+            ctx.font = '600 13px Outfit, sans-serif';
+            ctx.fillStyle = '#475569';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(`Ext ${extDegValue}°`, labelX, labelY);
+        }
+
+        // Helper to draw side length along edge
+        function drawSideLabel(p1, p2, lengthVal) {
+            const midX = (p1.x + p2.x) / 2;
+            const midY = (p1.y + p2.y) / 2;
+
+            // Calculate perpendicular offset direction
+            const dx = p2.x - p1.x;
+            const dy = p2.y - p1.y;
+            const len = Math.hypot(dx, dy) || 1;
+            const offsetX = -dy / len * 18;
+            const offsetY = dx / len * 18;
+
+            ctx.font = '700 14px "JetBrains Mono", monospace';
+            ctx.fillStyle = '#0f172a';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(lengthVal.toString(), midX + offsetX, midY + offsetY);
+        }
+
+        // Geometric orientation helper
+        function isClockwise(p1, p2, p3) {
+            return (p2.x - p1.x) * (p3.y - p1.y) - (p2.y - p1.y) * (p3.x - p1.x) < 0;
+        }
+
+        function getMidAngle(a1, a2, cw) {
+            let diff = a2 - a1;
+            if (cw) {
+                if (diff > 0) diff -= Math.PI * 2;
+            } else {
+                if (diff < 0) diff += Math.PI * 2;
+            }
+            return a1 + diff / 2;
+        }
+
+        function updateUI() {
+            // Update Inputs
+            inputA.value = state.angles.A;
+            inputB.value = state.angles.B;
+            inputC.value = state.angles.C;
+
+            // Right Sidebar - Interior
+            valIntA.textContent = `${state.angles.A}°`;
+            valIntB.textContent = `${state.angles.B}°`;
+            valIntC.textContent = `${state.angles.C}°`;
+            eqInterior.textContent = `${state.angles.A}° + ${state.angles.B}° + ${state.angles.C}° = 180°`;
+
+            // Right Sidebar - Exterior
+            valExtA.textContent = `${state.extAngles.A}°`;
+            valExtB.textContent = `${state.extAngles.B}°`;
+            valExtC.textContent = `${state.extAngles.C}°`;
+            eqExterior.textContent = `${state.extAngles.A}° + ${state.extAngles.B}° + ${state.extAngles.C}° = 360°`;
+
+            // Classification by Sides
+            const sa = state.sides.a, sb = state.sides.b, sc = state.sides.c;
+            const eps = 0.08;
+            let sideType = 'Scalene triangle';
+            if (Math.abs(sa - sb) < eps && Math.abs(sb - sc) < eps) {
+                sideType = 'Equilateral triangle';
+            } else if (Math.abs(sa - sb) < eps || Math.abs(sb - sc) < eps || Math.abs(sa - sc) < eps) {
+                sideType = 'Isosceles triangle';
+            }
+            labelSideType.textContent = `By sides: ${sideType}`;
+
+            // Classification by Angles
+            const maxAng = Math.max(state.angles.A, state.angles.B, state.angles.C);
+            let angleType = 'Acute triangle';
+            if (maxAng === 90) {
+                angleType = 'Right triangle';
+            } else if (maxAng > 90) {
+                angleType = 'Obtuse triangle';
+            }
+            labelAngleType.textContent = `By angles: ${angleType}`;
+        }
+
+        function drawTriangleFromAngles(angA, angB, angC) {
+            const radA = (angA * Math.PI) / 180;
+            const radB = (angB * Math.PI) / 180;
+            const radC = (angC * Math.PI) / 180;
+
+            const baseLen = 260; // Base side c (AB) length
+            
+            // Side b (AC) length using Law of Sines
+            const sideB = (baseLen * Math.sin(radB)) / Math.sin(radC);
+
+            const size = getCanvasSize();
+            const startX = (size.width - baseLen) / 2;
+            const startY = size.height * 0.72;
+
+            state.vertices.A.x = startX;
+            state.vertices.A.y = startY;
+
+            state.vertices.B.x = startX + baseLen;
+            state.vertices.B.y = startY;
+
+            // Vertex C position relative to A
+            state.vertices.C.x = startX + sideB * Math.cos(radA);
+            state.vertices.C.y = startY - sideB * Math.sin(radA);
+
+            computeGeometry();
+            render();
+        }
+
+        function getPointerPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return {
+                x: clientX - rect.left,
+                y: clientY - rect.top
+            };
+        }
+
+        function handlePointerDown(e) {
+            const pos = getPointerPos(e);
+            const hitRadius = 24;
+
+            for (const key of ['A', 'B', 'C']) {
+                const v = state.vertices[key];
+                if (dist(pos, v) < hitRadius) {
+                    state.draggingVertex = key;
+                    break;
+                }
+            }
+        }
+
+        function handlePointerMove(e) {
+            if (!state.draggingVertex) return;
+            e.preventDefault();
+
+            const pos = getPointerPos(e);
+            const size = getCanvasSize();
+            const padding = 35;
+
+            // Clamp inside canvas bounds
+            const clampedX = Math.max(padding, Math.min(size.width - padding, pos.x));
+            const clampedY = Math.max(padding, Math.min(size.height - padding, pos.y));
+
+            state.vertices[state.draggingVertex].x = clampedX;
+            state.vertices[state.draggingVertex].y = clampedY;
+
+            computeGeometry();
+            render();
+        }
+
+        function handlePointerUp() {
+            state.draggingVertex = null;
+        }
+
+        // Event Listeners for Dragging
+        canvas.addEventListener('mousedown', handlePointerDown);
+        window.addEventListener('mousemove', handlePointerMove);
+        window.addEventListener('mouseup', handlePointerUp);
+
+        canvas.addEventListener('touchstart', handlePointerDown, { passive: false });
+        window.addEventListener('touchmove', handlePointerMove, { passive: false });
+        window.addEventListener('touchend', handlePointerUp);
+
+        // Control Inputs & Buttons
+        btnDraw.addEventListener('click', () => {
+            let a = parseInt(inputA.value) || 60;
+            let b = parseInt(inputB.value) || 60;
+            let c = parseInt(inputC.value) || 60;
+
+            // Normalize sum to 180 if needed
+            const total = a + b + c;
+            if (total !== 180) {
+                c = 180 - a - b;
+                if (c <= 5) {
+                    a = 60; b = 60; c = 60;
+                }
+            }
+            drawTriangleFromAngles(a, b, c);
+        });
+
+        btnEquilateral.addEventListener('click', () => {
+            drawTriangleFromAngles(60, 60, 60);
+        });
+
+        btnRandom.addEventListener('click', () => {
+            const a = Math.floor(Math.random() * 80) + 25;
+            const b = Math.floor(Math.random() * (150 - a)) + 20;
+            const c = 180 - a - b;
+            drawTriangleFromAngles(a, b, c);
+        });
+
+        toggleExterior.addEventListener('change', (e) => {
+            state.showExterior = e.target.checked;
+            render();
+        });
+
+        // Initialize Application
+        window.onload = () => {
+            resizeCanvas();
+            drawTriangleFromAngles(60, 60, 60);
+        };
+
+        window.addEventListener('resize', resizeCanvas);
+    </script>
+</body>
+</html>
