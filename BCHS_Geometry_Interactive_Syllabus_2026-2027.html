@@ -1,0 +1,730 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#071625">
+<title>BCHS Geometry · Interactive Syllabus 2026–2027</title>
+<style>
+  :root { --bg:#071522; --surface:#102437; --surface-2:#152d43; --surface-3:#1b3549; --text:#f2f7fc; --muted:#a4bbce; --soft:#7f9bb0; --line:#2c475e; --accent:#5de3d5; --accent-2:#2ec2cb; --warm:#ffc482; --ink:#15334d; --danger:#ffc0b3; --radius:20px; }
+  * { box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  body { margin:0; min-height:100vh; font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif; color:var(--text); background:radial-gradient(ellipse 62% 48% at 88% 1%,rgba(19,98,114,.27),transparent 65%),radial-gradient(ellipse 55% 55% at 0 100%,rgba(25,70,117,.20),transparent 70%),var(--bg); }
+  button,input,select,textarea { font:inherit; }
+  button { cursor:pointer; }
+  button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible { outline:3px solid var(--warm); outline-offset:3px; }
+  .app { max-width:1730px; margin:0 auto; padding:17px clamp(14px,2.2vw,32px) 24px; }
+  .app-header { display:flex; align-items:center; justify-content:space-between; gap:18px; padding:4px 4px 17px; }
+  .brand { display:flex; align-items:center; gap:14px; min-width:0; }
+  .brand-icon { width:54px; height:54px; border:1px solid #47758a; border-radius:16px; display:grid; place-items:center; background:linear-gradient(145deg,#174354,#102536); flex:0 0 auto; }
+  .brand-kicker { letter-spacing:.17em; font-weight:700; font-size:10px; color:#9dcfcf; }
+  .brand-title { font-size:clamp(19px,2.1vw,27px); font-weight:800; letter-spacing:-.035em; margin:4px 0 2px; line-height:1.08; }
+  .brand-subtitle { color:var(--muted); font-size:12px; letter-spacing:.025em; }
+  .header-actions { display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
+  .top-date { text-align:right; margin-right:5px; }
+  .top-date span { display:block; color:var(--muted); font-size:10px; letter-spacing:.12em; font-weight:750; text-transform:uppercase; }
+  .top-date strong { display:block; font-size:15px; letter-spacing:.04em; white-space:nowrap; }
+  .ui-btn { border:1px solid #41627b; background:#1a3348; color:var(--text); padding:10px 13px; border-radius:12px; font-size:12px; font-weight:720; display:inline-flex; align-items:center; justify-content:center; gap:8px; transition:background .15s,border-color .15s,transform .15s; }
+  .ui-btn:hover { background:#284b60; border-color:#7296a7; }
+  .ui-btn:active { transform:translateY(1px); }
+  .ui-btn.primary { background:var(--accent); color:#092c37; border-color:var(--accent); }
+  .ui-btn.primary:hover { background:#8df3e6; }
+  .ui-btn.ghost { background:transparent; border-color:#3c586a; }
+  .ui-btn.light { color:#154153; background:#e9f7fa; border-color:#9dbcc9; }
+  .ui-btn:disabled { opacity:.42; cursor:not-allowed; }
+  .icon-inline { width:15px; height:15px; display:block; flex:0 0 auto; }
+  .workspace { display:grid; grid-template-columns:minmax(265px,312px) minmax(0,1fr); gap:16px; align-items:stretch; }
+  .panel { border:1px solid var(--line); border-radius:var(--radius); background:linear-gradient(155deg,#10283c,#0c2032); box-shadow:0 14px 36px rgba(1,11,24,.13); }
+  .calendar-panel { padding:18px 16px 14px; display:flex; flex-direction:column; min-width:0; }
+  .panel-heading { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .section-kicker { text-transform:uppercase; letter-spacing:.15em; font-size:10px; color:#93c6c8; font-weight:800; }
+  .status-chip { font-size:10px; border:1px solid #46716f; color:#9fe5d7; background:#173c46; padding:5px 8px; border-radius:50px; white-space:nowrap; }
+  .month-navigation { display:flex; align-items:center; justify-content:space-between; gap:6px; margin:18px 0 12px; }
+  .month-name { font-size:21px; font-weight:800; letter-spacing:-.035em; white-space:nowrap; }
+  .month-switch { display:flex; align-items:center; gap:6px; }
+  .square-btn { border:1px solid #3e5a70; background:#163248; color:#e4f4f8; border-radius:9px; width:33px; height:33px; display:grid; place-items:center; font-size:19px; line-height:1; }
+  .square-btn:hover { background:#286177; }
+  .calendar-week-labels { display:grid; grid-template-columns:25px repeat(7,minmax(0,1fr)); align-items:center; gap:3px; text-align:center; font-size:10px; font-weight:800; color:#8faabd; padding-bottom:8px; }
+  .calendar-weeks { display:flex; flex-direction:column; gap:4px; }
+  .calendar-row { display:grid; grid-template-columns:25px repeat(7,minmax(0,1fr)); gap:3px; align-items:stretch; border-radius:10px; padding:2px 0; }
+  .calendar-row.is-chosen-week { background:#1a394c; }
+  .week-pick { background:transparent; color:#6cb5bd; border:0; border-radius:7px; font-size:9px; font-weight:800; text-align:center; padding:0; min-height:34px; }
+  .week-pick:hover { color:#fff; background:#2a5162; }
+  .calendar-day { position:relative; border:1px solid transparent; background:transparent; color:#dce8f2; border-radius:8px; font-size:12px; min-width:0; height:34px; padding:0; font-weight:650; }
+  .calendar-day:hover { background:#355166; }
+  .calendar-day.other-month { color:#587b91; }
+  .calendar-day.weekend { color:#91a5b9; }
+  .calendar-day.is-today::after { content:""; position:absolute; bottom:4px; left:calc(50% - 2px); border-radius:50%; width:4px; height:4px; background:var(--warm); }
+  .calendar-day.is-selected { background:var(--accent); color:#0b3441; border-color:#b8fff4; font-weight:850; }
+  .calendar-day.is-selected::after { background:#173b46; }
+  .calendar-day.has-override:not(.is-selected)::before { content:""; position:absolute; top:3px; right:4px; width:4px; height:4px; border-radius:50%; background:var(--warm); }
+  .calendar-helper { font-size:11px; line-height:1.45; color:#94b4c6; margin:12px 0 0; }
+  .calendar-helper strong { color:#d6e9f0; }
+  .selection-summary { margin-top:auto; padding:14px 13px 12px; border-radius:14px; background:#0a1c2b; border:1px solid #2b5262; }
+  .summary-label { color:#97b8bf; text-transform:uppercase; font-weight:800; font-size:9px; letter-spacing:.14em; }
+  .summary-main { margin-top:5px; font-size:14px; font-weight:800; line-height:1.4; }
+  .summary-secondary { margin-top:4px; font-size:11px; color:#a7bccc; line-height:1.35; }
+  .summary-actions { display:flex; justify-content:space-between; align-items:center; margin-top:12px; gap:9px; }
+  .summary-actions .ui-btn { padding:7px 10px; }
+  .week-quick { display:flex; align-items:center; gap:7px; }
+  .week-quick .square-btn { width:30px; height:29px; font-size:16px; }
+  .unit-feature { padding:19px; display:grid; grid-template-columns:minmax(0,1.03fr) minmax(0,.97fr); gap:16px; min-height:438px; overflow:hidden; position:relative; border-color:#3a6575; background:linear-gradient(132deg,#173249 1%,#0c2032 70%); }
+  .unit-feature::before { content:""; display:block; position:absolute; top:0; left:0; width:32%; height:3px; background:linear-gradient(90deg,var(--accent),transparent); }
+  .unit-content { min-width:0; display:flex; flex-direction:column; }
+  .unit-overline { display:flex; align-items:center; gap:7px; flex-wrap:wrap; margin-bottom:13px; }
+  .unit-number { font-size:11px; letter-spacing:.14em; color:#062c34; background:var(--accent); border-radius:6px; padding:5px 8px; font-weight:900; }
+  .unit-semester { color:#acc9d9; font-size:10px; font-weight:800; letter-spacing:.12em; }
+  .unit-state { color:#efd1a5; border:1px solid #786751; font-size:10px; padding:5px 8px; border-radius:50px; font-weight:700; margin-left:auto; }
+  h1.active-unit-title { font-size:clamp(26px,2.65vw,43px); line-height:1.10; letter-spacing:-.04em; margin:1px 0 11px; font-weight:850; }
+  .unit-description { font-size:clamp(12px,1.05vw,14px); color:#b6ccdb; line-height:1.53; margin:0 0 15px; max-width:60ch; }
+  .focus-card { background:linear-gradient(100deg,rgba(78,222,215,.13),rgba(32,92,107,.12)); border-left:3px solid var(--accent); padding:11px 13px; border-radius:0 11px 11px 0; margin-bottom:13px; }
+  .mini-label { color:#8bdacb; font-size:9px; font-weight:900; letter-spacing:.15em; text-transform:uppercase; }
+  .focus-text { display:block; margin-top:5px; font-size:clamp(14px,1.26vw,18px); font-weight:750; line-height:1.34; color:#f4fffe; }
+  .target-title { color:#9dced3; font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:.14em; margin-bottom:5px; }
+  .target-text { font-weight:660; font-size:13px; line-height:1.39; margin:0 0 11px; }
+  .criteria-header { color:#9dced3; font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:.14em; }
+  .criteria-list { list-style:none; padding:0; margin:7px 0 10px; display:grid; gap:6px; }
+  .criteria-list li { display:flex; align-items:flex-start; gap:8px; font-size:12px; color:#d9e9f0; line-height:1.36; }
+  .criteria-list li::before { content:"✓"; color:var(--accent); font-weight:800; flex:0 0 auto; }
+  .campus-context { margin-top:auto; border-top:1px solid #34536a; padding-top:10px; font-size:11px; color:#b3cbd9; line-height:1.4; }
+  .campus-context strong { color:#f3d1a5; font-size:10px; letter-spacing:.08em; text-transform:uppercase; }
+  .preview-return { color:#9cebe1; border:0; background:transparent; text-decoration:underline; font-size:11px; font-weight:800; padding:0; margin-top:10px; align-self:flex-start; }
+  .diagram-panel { display:flex; flex-direction:column; min-width:0; border-radius:17px; background:linear-gradient(165deg,#edf8ff,#dceef5); overflow:hidden; color:var(--ink); box-shadow:0 11px 28px rgba(1,8,19,.13); }
+  .diagram-top { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:14px 15px 8px; }
+  .diagram-kicker { text-transform:uppercase; color:#356879; font-weight:900; letter-spacing:.13em; font-size:9px; }
+  .diagram-tag { font-size:10px; color:#436d78; background:#cee5ed; border-radius:20px; padding:5px 9px; font-weight:750; }
+  .diagram-svg-wrap { flex:1 1 auto; min-height:0; display:flex; align-items:center; justify-content:center; padding:0 4px; }
+  .diagram-svg-wrap svg { width:100%; height:auto; max-height:290px; display:block; }
+  .operation-controls { padding:4px 12px 0; }
+  .operation-tabs { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); background:#c8e3e9; border-radius:9px; padding:3px; gap:3px; }
+  .operation-tabs button { padding:6px 5px; min-width:0; font-size:11px; font-weight:800; color:#41677b; background:transparent; border:0; border-radius:7px; }
+  .operation-tabs button.on { color:#12364a; background:#fff; box-shadow:0 1px 6px #7baeb077; }
+  .rotation-controls { display:flex; align-items:center; gap:9px; padding:7px 4px 3px; font-size:10px; color:#3d6879; font-weight:750; }
+  .rotation-controls input { min-width:0; flex:1; accent-color:#00899a; }
+  .rotation-value { background:#fff; border:1px solid #bad7dc; border-radius:7px; min-width:50px; padding:3px 5px; text-align:center; color:#1f5664; font-weight:900; }
+  .diagram-footer { padding:9px 14px 12px; color:#366477; font-size:11px; font-weight:740; line-height:1.4; text-align:center; min-height:38px; }
+  .roadmap { margin-top:15px; }
+  .roadmap-titlebar { display:flex; justify-content:space-between; align-items:end; gap:10px; padding:0 3px 10px; }
+  .roadmap-title { margin:3px 0 0; font-size:17px; letter-spacing:-.025em; font-weight:850; }
+  .roadmap-note { font-size:11px; color:#91afc0; }
+  .units-grid { display:grid; grid-template-columns:repeat(8,minmax(0,1fr)); gap:9px; }
+  .unit-tile { padding:11px; min-width:0; min-height:115px; color:#abc1cf; background:linear-gradient(142deg,#102637,#0a1b2c); border:1px solid #2a4356; border-radius:13px; text-align:left; display:flex; flex-direction:column; gap:6px; transition:transform .15s,border-color .15s,background .15s; }
+  .unit-tile:hover { background:#193b4d; transform:translateY(-2px); }
+  .unit-tile.active { border:1.6px solid var(--accent); background:linear-gradient(145deg,#1b4954,#14323f); box-shadow:0 0 0 1px rgba(93,227,213,.14),inset 0 1px 16px rgba(91,226,212,.07); color:#effffd; }
+  .unit-tile.preview { border-color:var(--warm); background:#3c3635; color:#fff7e9; }
+  .tile-top { display:flex; align-items:center; justify-content:space-between; gap:5px; }
+  .tile-id { font-weight:900; font-size:10px; color:#91b2bc; letter-spacing:.1em; }
+  .unit-tile.active .tile-id { color:#8af0de; }
+  .tile-glyph { width:37px; height:27px; opacity:.9; }
+  .tile-title { font-size:clamp(10px,.83vw,12px); font-weight:800; line-height:1.26; }
+  .tile-status { margin-top:auto; text-transform:uppercase; font-size:9px; font-weight:900; letter-spacing:.07em; color:#7194a6; }
+  .unit-tile.active .tile-status { color:#89e7d8; }
+  .unit-tile.preview .tile-status { color:#ffdea9; }
+  .app-footer { margin-top:12px; padding:0 4px; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; color:#7999aa; font-size:10px; line-height:1.4; }
+  .save-state { display:inline-flex; align-items:center; gap:7px; }
+  .save-dot { width:7px;height:7px;border-radius:50%;background:#66cfbd;display:inline-block; }
+  .save-state.unsaved .save-dot {background:#fbb17e;}
+  .drawer-backdrop { position:fixed; inset:0; background:rgba(2,10,19,.70); backdrop-filter:blur(3px); z-index:20; }
+  .drawer { position:fixed; top:0; right:0; width:min(490px,100vw); height:100dvh; z-index:21; padding:0; display:flex; flex-direction:column; overflow:hidden; border-left:1px solid #527489; background:#0e2233; box-shadow:-22px 0 60px rgba(0,0,0,.33); }
+  [hidden] { display:none !important; }
+  .drawer-header { padding:19px 21px; display:flex; justify-content:space-between; align-items:center; gap:12px; border-bottom:1px solid #32546b; }
+  .drawer-title { font-size:20px; margin:3px 0 0; letter-spacing:-.025em; }
+  .drawer-body { overflow-y:auto; padding:17px 21px 38px; }
+  .drawer-section { padding:0 0 17px; margin:0 0 17px; border-bottom:1px solid #30485c; }
+  .drawer-section:last-child { border:0; }
+  .drawer-heading { margin:0 0 6px; font-size:14px; font-weight:850; }
+  .drawer-copy { margin:4px 0 12px; font-size:12px; line-height:1.5; color:#a9c1d0; }
+  .field-label { display:block; color:#b4d5d6; font-size:11px; font-weight:800; margin:12px 0 6px; }
+  .form-input,.form-select,.form-textarea { display:block; width:100%; border:1px solid #4d6c7d; border-radius:10px; background:#092031; color:#f7fafd; font-size:13px; padding:10px 11px; }
+  .form-input[type="date"] { color-scheme:dark; }
+  .form-textarea { resize:vertical; min-height:70px; line-height:1.4; }
+  .buttons-row { display:flex; gap:7px; flex-wrap:wrap; margin-top:10px; }
+  .buttons-row .ui-btn { padding:9px 10px; }
+  .date-editor { display:grid; gap:7px; }
+  .date-edit-row { display:grid; grid-template-columns:minmax(0,1fr) 155px; align-items:center; gap:9px; }
+  .date-edit-row label { font-size:11px; font-weight:650; color:#d4e8ed; line-height:1.25; }
+  .date-edit-row input { padding:7px 8px; }
+  .edit-help { background:#163747; border-left:3px solid var(--warm); padding:10px; font-size:11px; line-height:1.45; color:#d8e7ef; border-radius:0 9px 9px 0; }
+  .notice { padding:11px 12px; background:#183649; border:1px solid #447a82; border-radius:10px; color:#d1f7f2; font-size:12px; line-height:1.4; margin-top:10px; }
+  .notice.error { background:#472c30; color:#ffe0dc; border-color:#a16163; }
+  .small-note { font-size:11px; color:#99b1c1; line-height:1.4; }
+  .danger { color:#ffe1db; border-color:#8d5e65; background:#3b2b35; }
+  .danger:hover { background:#67414a; }
+  body.is-projection .app-footer { display:none; }
+  body.is-projection .top-date span { color:#bcdfeb; }
+  @media(max-width:1450px) { .units-grid { grid-template-columns:repeat(4,minmax(0,1fr)); } .unit-tile { min-height:88px; } .tile-title { font-size:12px; } }
+  @media(max-width:1250px) { .workspace { grid-template-columns:minmax(250px,285px) minmax(0,1fr); gap:12px; } .unit-feature { padding:14px; gap:11px; } .calendar-panel { padding:15px 12px 12px; } .brand-title {font-size:21px;} .unit-description {font-size:12px;} h1.active-unit-title {font-size:29px;} .criteria-list li {font-size:11px;} .diagram-top {padding:10px 10px 3px;} .diagram-footer {font-size:10px;} }
+  @media(max-width:975px) { .unit-feature {grid-template-columns:1fr; } .diagram-panel {min-height:310px;} .workspace { grid-template-columns:minmax(240px,285px) minmax(0,1fr); align-items:start; } .unit-content {min-height:330px;} .calendar-panel {position:sticky;top:10px;} }
+  @media(max-width:790px) { .workspace { grid-template-columns:1fr; } .calendar-panel { position:static; } .unit-feature { grid-template-columns:1fr; } .unit-content { min-height:0; } .calendar-weeks { max-width:360px;} .calendar-week-labels { max-width:360px;} .selection-summary { margin-top:15px;} .units-grid {grid-template-columns:repeat(2,minmax(0,1fr));} .top-date {display:none;} .header-actions .ui-btn {padding:9px;} .brand-icon{width:42px;height:42px;} .brand-kicker{font-size:8px;} .brand-title{font-size:19px;} .app-header{gap:6px;flex-wrap:wrap;} }
+  @media(max-height:790px) and (min-width:976px) { .unit-feature {min-height:385px;} .calendar-panel{padding-top:13px;padding-bottom:11px;} .month-navigation{margin:10px 0 8px;} .calendar-day{height:30px;} .week-pick{min-height:30px;} .unit-description{margin-bottom:8px;} .focus-card{padding:8px 10px; margin-bottom:8px;} .criteria-list{gap:4px;} .target-text{margin-bottom:8px;} .unit-tile{min-height:76px; padding:8px;} .roadmap{margin-top:10px;} .roadmap-titlebar{padding-bottom:6px;} .diagram-svg-wrap svg{max-height:220px;} .selection-summary{padding:10px;} }
+  @media(max-width:1100px) and (max-height:800px) and (min-width:976px) {
+    .app { padding-top:9px; padding-bottom:9px; }
+    .app-header { padding-bottom:10px; }
+    .unit-feature { padding:11px; min-height:0; }
+    .unit-overline { margin-bottom:7px; }
+    h1.active-unit-title { font-size:26px; margin-bottom:7px; }
+    .unit-description { line-height:1.38; margin-bottom:6px; }
+    .focus-card { padding:7px 10px; margin-bottom:7px; }
+    .target-text { font-size:12px; line-height:1.3; margin-bottom:6px; }
+    .criteria-list { gap:3px; margin:5px 0; }
+    .criteria-list li { font-size:11px; line-height:1.27; }
+    .campus-context { padding-top:6px; }
+    .calendar-day { height:28px; }
+    .week-pick { min-height:28px; }
+    .calendar-helper { margin:7px 0 0; }
+    .selection-summary { padding:8px; }
+    .selection-summary .summary-actions { margin-top:7px; }
+    .roadmap { margin-top:7px; }
+    .roadmap-titlebar { padding-bottom:4px; }
+    .roadmap-title { font-size:15px; }
+    .unit-tile { min-height:69px; padding:7px; }
+    .app-footer { margin-top:8px; }
+  }
+  @media(prefers-reduced-motion:reduce) { *,*::before,*::after {scroll-behavior:auto!important;transition:none!important;} }
+  @media print { body{background:#fff;color:#152c41;} .app-header,.calendar-panel,.app-footer,.drawer,.drawer-backdrop,.roadmap-note{display:none!important;} .workspace{display:block;} .unit-feature{break-inside:avoid;color:#123146;border:2px solid #8299a6;background:#fff;} .unit-description,.criteria-list li,.target-text,.campus-context{color:#223a50;} .unit-feature::before{display:none;} .roadmap {margin-top:12px;} .unit-tile {border:1px solid #8e9eab;color:#152a3d;background:#fff!important;} }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <header class="app-header">
+    <div class="brand">
+      <div class="brand-icon" aria-hidden="true">
+        <svg width="43" height="43" viewBox="0 0 48 48" fill="none"><path d="M7 37L22 9L41 37H7Z" stroke="#7BE7DF" stroke-width="2.7"/><path d="M7 37L22 28L41 37" stroke="#F8C388" stroke-width="2.2"/><circle cx="22" cy="9" r="2.8" fill="#C4F2E9"/><circle cx="22" cy="28" r="2" fill="#F8C388"/></svg>
+      </div>
+      <div>
+        <div class="brand-kicker">BOURGADE CATHOLIC HIGH SCHOOL</div>
+        <div class="brand-title">Geometry <span style="font-weight:430;color:#9dc5cf">/ Learning Map</span></div>
+        <div class="brand-subtitle">2026–2027 · Period 5 · Room 001</div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <div class="top-date"><span>Selected lesson date</span><strong id="headerSelectedDate">OCT 29, 2026</strong></div>
+      <button class="ui-btn ghost" id="todayTopBtn" title="Show today's date">Today</button>
+      <button class="ui-btn" id="projectionBtn" title="Use full screen for the projector">⛶ <span id="projectionLabel">Presentación</span></button>
+      <button class="ui-btn primary" id="openTeacherBtn" aria-haspopup="dialog">⚙ <span>Controles</span></button>
+    </div>
+  </header>
+
+  <main>
+    <section class="workspace">
+      <aside class="panel calendar-panel" aria-label="Course calendar">
+        <div class="panel-heading">
+          <div class="section-kicker">CURRICULUM CALENDAR</div>
+          <span class="status-chip" id="calendarStatus">PLANNED</span>
+        </div>
+        <div class="month-navigation">
+          <div class="month-name" id="monthName">October 2026</div>
+          <div class="month-switch"><button class="square-btn" id="prevMonthBtn" aria-label="Previous month">‹</button><button class="square-btn" id="nextMonthBtn" aria-label="Next month">›</button></div>
+        </div>
+        <div class="calendar-week-labels" aria-hidden="true"><span>WK</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span></div>
+        <div class="calendar-weeks" id="calendarWeeks" aria-label="Dates (select a date or week)"></div>
+        <p class="calendar-helper">Select a <strong>day</strong>, or click <strong>WK</strong> at the start of a row to select the whole week.</p>
+        <div class="selection-summary">
+          <div class="summary-label" id="selectionModeLabel">SELECTED DAY</div>
+          <div class="summary-main" id="selectionMain">Thursday, October 29, 2026</div>
+          <div class="summary-secondary" id="selectionExtra">Unit 2 · Transformations and Symmetry</div>
+          <div class="summary-actions">
+            <div class="week-quick">
+              <button class="square-btn" id="prevWeekBtn" title="Previous week" aria-label="Previous week">‹</button>
+              <button class="square-btn" id="nextWeekBtn" title="Next week" aria-label="Next week">›</button>
+            </div>
+            <button class="ui-btn" id="todayCalendarBtn">Today · Hoy</button>
+          </div>
+        </div>
+      </aside>
+
+      <article class="panel unit-feature" id="activeFeature" aria-live="polite">
+        <div class="unit-content">
+          <div class="unit-overline">
+            <span class="unit-number" id="activeUnitNumber">UNIT 02</span>
+            <span class="unit-semester" id="activeSemester">SEMESTER I</span>
+            <span class="unit-state" id="activeSource">SCHEDULED</span>
+          </div>
+          <h1 class="active-unit-title" id="activeUnitTitle">Transformations and Symmetry</h1>
+          <p class="unit-description" id="activeDescription"></p>
+          <div class="focus-card"><div class="mini-label" id="focusLabel">THIS WEEK'S FOCUS · SUGGESTED</div><span class="focus-text" id="activeFocus"></span></div>
+          <div class="target-title">Learning target</div><p class="target-text" id="activeTarget"></p>
+          <div class="criteria-header">Success criteria · I can...</div>
+          <ul class="criteria-list" id="activeCriteria"></ul>
+          <div class="campus-context"><strong>Geometry on campus </strong><span id="activeCampus"></span></div>
+          <button class="preview-return" id="previewReturn" hidden>← Return to the selected date</button>
+        </div>
+        <div class="diagram-panel">
+          <div class="diagram-top"><span class="diagram-kicker">GEOMETRY · VISUAL MODEL</span><span class="diagram-tag" id="diagramTag">Rigid motions</span></div>
+          <div class="diagram-svg-wrap" id="diagramStage" role="group" aria-label="Geometry illustration"></div>
+          <div class="operation-controls" id="operationControls" hidden>
+            <div class="operation-tabs" role="group" aria-label="Choose transformation">
+              <button type="button" data-operation="translation">Translation</button>
+              <button type="button" data-operation="reflection">Reflection</button>
+              <button type="button" data-operation="rotation">Rotation</button>
+            </div>
+            <div class="rotation-controls" id="rotationControls" hidden>
+              <label for="rotationSlider">Angle</label><input id="rotationSlider" type="range" min="0" max="360" step="5" value="100" aria-label="Rotation angle in degrees">
+              <span class="rotation-value" id="rotationValue">100°</span>
+            </div>
+          </div>
+          <div class="diagram-footer" id="diagramFooter"></div>
+        </div>
+      </article>
+    </section>
+
+    <section class="roadmap" aria-label="All geometry units">
+      <div class="roadmap-titlebar">
+        <div><div class="section-kicker">COURSE OVERVIEW</div><div class="roadmap-title">Eight units · one learning journey</div></div>
+        <div class="roadmap-note">Select a card to preview; the calendar controls the active unit.</div>
+      </div>
+      <div class="units-grid" id="unitTiles"></div>
+    </section>
+  </main>
+  <footer class="app-footer">
+    <span>Based on the BCHS Geometry Syllabus (October 2026 revision). <strong>Start dates are editable teaching estimates</strong>, not official school-calendar dates.</span>
+    <span class="save-state" id="saveState"><span class="save-dot"></span><span id="saveStateText">Changes saved in this browser</span></span>
+  </footer>
+</div>
+
+<div class="drawer-backdrop" id="drawerBackdrop" hidden></div>
+<aside class="drawer" id="teacherDrawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle" hidden>
+  <div class="drawer-header">
+    <div><div class="section-kicker">PANEL DEL PROFESOR</div><h2 class="drawer-title" id="drawerTitle">Sincronización y contenidos</h2></div>
+    <button class="square-btn" id="closeTeacherBtn" aria-label="Cerrar controles">×</button>
+  </div>
+  <div class="drawer-body">
+    <section class="drawer-section">
+      <h3 class="drawer-heading">1 · Asignación manual</h3>
+      <p class="drawer-copy">Asigne una unidad al día o a la semana seleccionada. Tendrá prioridad sobre la programación general, sin cambiar las demás fechas.</p>
+      <div class="small-note" id="drawerSelectionLabel"></div>
+      <label class="field-label" for="manualUnitSelect">Unidad que desea mostrar</label>
+      <select class="form-select" id="manualUnitSelect"></select>
+      <div class="buttons-row">
+        <button class="ui-btn primary" id="assignDayBtn">Asignar al día</button>
+        <button class="ui-btn" id="assignWeekBtn">Asignar a la semana</button>
+        <button class="ui-btn ghost" id="clearOverrideBtn">Volver al plan</button>
+      </div>
+    </section>
+    <section class="drawer-section">
+      <h3 class="drawer-heading">2 · Ajustar el ritmo del curso</h3>
+      <p class="drawer-copy" id="shiftExplanation">La próxima unidad comenzará en la fecha prevista.</p>
+      <div class="buttons-row"><button class="ui-btn" id="delayBtn">+ 1 semana de retraso</button><button class="ui-btn" id="advanceBtn">− 1 semana de retraso</button></div>
+      <p class="small-note">Los botones desplazan siete días <strong>las unidades siguientes</strong>, conservando el inicio de la unidad seleccionada. Los ajustes quedan guardados.</p>
+    </section>
+    <section class="drawer-section">
+      <h3 class="drawer-heading">3 · Enfoque del día o de la semana</h3>
+      <p class="drawer-copy">Personalice el tema visible en la tarjeta grande. No altera el programa de unidades.</p>
+      <label class="field-label" for="focusInput" id="focusInputLabel">Enfoque de la fecha seleccionada</label>
+      <textarea id="focusInput" class="form-textarea" placeholder="Ej.: Rotations of triangles: 100° counterclockwise" maxlength="180"></textarea>
+      <div class="buttons-row"><button class="ui-btn primary" id="saveFocusBtn">Guardar enfoque</button><button class="ui-btn ghost" id="clearFocusBtn">Usar sugerencia</button></div>
+    </section>
+    <section class="drawer-section">
+      <h3 class="drawer-heading">4 · Fechas de inicio por unidad</h3>
+      <div class="edit-help">Las fechas del prototipo son <strong>provisionales</strong>. Introduzca las fechas de BCHS que corresponden a su avance real. Los inicios deben mantenerse en orden cronológico.</div>
+      <div class="date-editor" id="dateEditor" style="margin-top:12px"></div>
+      <div class="buttons-row"><button class="ui-btn primary" id="saveDatesBtn">Guardar fechas</button></div>
+    </section>
+    <section class="drawer-section">
+      <h3 class="drawer-heading">5 · Copia de seguridad</h3>
+      <p class="drawer-copy">Los cambios se guardan en este navegador. Exporte un archivo JSON para llevar los ajustes a otra computadora o conservar un respaldo.</p>
+      <div class="buttons-row">
+        <button class="ui-btn" id="exportBtn">Exportar ajustes</button>
+        <button class="ui-btn" id="importBtn">Importar ajustes</button>
+        <input type="file" id="importFile" accept=".json,application/json" hidden>
+        <button class="ui-btn danger" id="resetBtn">Restaurar programación inicial</button>
+      </div>
+      <p class="small-note">La restauración elimina las modificaciones locales. Se solicitará confirmación.</p>
+    </section>
+    <div id="notice" role="status" hidden></div>
+  </div>
+</aside>
+
+<script>
+'use strict';
+const STORAGE_KEY = 'bchs-geometry-interactive-syllabus-v1';
+const INITIAL_STARTS = [
+  '2026-08-03','2026-10-05','2026-11-09','2026-12-01',
+  '2027-01-11','2027-02-15','2027-03-22','2027-04-19'
+];
+// Dates above are deliberately provisional because the syllabus contains a unit sequence but no official pacing dates.
+const UNITS = [
+  {id:1, semester:1, title:'Foundations, Constructions and Angles', short:'Foundations & Angles', description:'Measurement and precision; points, lines, planes, segments, angle relationships, parallel lines, transversals, and triangle angle reasoning.', target:'We are learning to construct, measure, name, and justify basic geometric relationships.', criteria:['Name and measure points, segments, and angles accurately.','Use angle relationships and algebra to find unknown values.','Explain triangle angle sums and exterior angles.'], topics:['Points, lines, planes, and basic notation','Segments, distance, midpoint, and bisectors','Constructing and measuring angles','Complementary, supplementary, and vertical angles','Parallel lines and transversals','Triangle classification and angle sums','Exterior angles and verification'], campus:'Observe and measure angles and line relationships in familiar structures.', figure:'angles'},
+  {id:2, semester:1, title:'Transformations and Symmetry', short:'Transformations & Symmetry', description:'Coordinate geometry; translations, reflections, rotations, compositions of rigid motions, symmetry, and dilations. Compare preserved and changed properties.', target:'We are learning to move geometric figures on the coordinate plane and explain what changes and what remains invariant.', criteria:['Apply a transformation rule to every vertex.','Draw and label preimages and images on a coordinate plane.','Verify corresponding lengths, angle measures, and orientation.'], topics:['Algebra 1 review and coordinate geometry','Translation vectors and translation rules','Mapping and translating figures on campus','Reflection and rotation of triangles','Compositions, symmetry, and dilations'], campus:'Use a coordinate map of the campus to locate and transform triangles.', figure:'transform'},
+  {id:3, semester:1, title:'Congruence and Proof', short:'Congruence & Proof', description:'Congruent figures, corresponding parts, triangle congruence criteria (SSS, SAS, ASA, AAS, HL), conditional statements, counterexamples, and proof.', target:'We are learning to justify when two figures must be congruent using valid evidence.', criteria:['Identify corresponding vertices and sides.','Select an appropriate triangle congruence criterion.','Write a clear mathematical justification.'], topics:['Congruent figures and correspondence','SSS and SAS conditions','ASA, AAS, and HL conditions','Statements, converses, and counterexamples','Applying congruence in proofs'], campus:'Test whether observed structures meet sufficient congruence conditions.', figure:'congruence'},
+  {id:4, semester:1, title:'Advanced Relationships and Polygons', short:'Triangles & Polygons', description:'Isosceles and equilateral relationships; medians, altitudes, bisectors, triangle centers, inequalities, polygon angle sums, quadrilaterals, and integrated proofs.', target:'We are learning to analyze how parts of triangles and polygons determine their properties.', criteria:['Construct important segments and locate triangle centers.','Apply triangle inequalities and angle relationships.','Justify properties of polygons and quadrilaterals.'], topics:['Isosceles and equilateral triangles','Medians, altitudes, and angle bisectors','Triangle centers and inequalities','Polygon angle sums and quadrilaterals','Integrated geometric arguments'], campus:'Investigate triangular supports, quadrilaterals, and structural symmetry.', figure:'medians'},
+  {id:5, semester:2, title:'Similarity and Proportional Reasoning', short:'Similarity & Scale', description:'Dilations, similarity criteria, proportional segments, scale drawings, indirect measurement, and practical problems involving scale.', target:'We are learning to use similarity and proportional relationships to explain scale.', criteria:['Identify similar figures and corresponding parts.','Calculate a scale factor and missing lengths.','Use a proportional model for indirect measurement.'], topics:['Dilations and scale factor','Similar figures and criteria','Proportional segments','Scale drawings and maps','Indirect measurement applications'], campus:'Produce and verify scale drawings of campus features.', figure:'similarity'},
+  {id:6, semester:2, title:'Right Triangles and Trigonometry', short:'Right Triangles & Trig', description:'Pythagorean relationships, special right triangles, sine, cosine, tangent, and models of distances and heights.', target:'We are learning to solve right-triangle problems with lengths, angles, and ratios.', criteria:['Use the Pythagorean theorem appropriately.','Choose sine, cosine, or tangent for a problem.','Check that a calculated distance is reasonable.'], topics:['Pythagorean theorem','Special right triangles','Sine, cosine, and tangent','Solving right triangles','Applications to height and distance'], campus:'Estimate heights and distances from shadows, baselines, and angles.', figure:'pythagoras'},
+  {id:7, semester:2, title:'Circles', short:'Circles', description:'Arcs, chords, central and inscribed angles, tangents, secants, circumference, area, circle equations, and coordinate relationships.', target:'We are learning to connect circle measurements, angles, and coordinate representations.', criteria:['Identify radius, chord, arc, tangent, and secant.','Solve circle angle and distance relationships.','Use circle formulas with correct units.'], topics:['Circle parts, chords, and arcs','Central and inscribed angles','Tangents and secants','Circumference and area','Circle equations and coordinates'], campus:'Find circular features and check measured radii, arcs, or tangents.', figure:'circle'},
+  {id:8, semester:2, title:'Area, Surface Area, and Volume', short:'Area, Surface & Volume', description:'Areas of composite figures; solids and cross-sections; surface area, volume, scaling effects, and constraints in geometric modeling.', target:'We are learning to model two- and three-dimensional measurements and explain our assumptions.', criteria:['Decompose a complex figure into measurable parts.','Calculate area, surface area, or volume with units.','Verify a model and explain its limitations.'], topics:['Areas of composite figures','Solid figures and cross-sections','Surface area of solids','Volume and similarity effects','Integrated campus modeling'], campus:'Estimate the area, surface area, or volume of a real campus feature.', figure:'volume'}
+];
+
+const $ = id => document.getElementById(id);
+function parseDate(iso) { return new Date(`${iso}T12:00:00Z`); }
+function dateISO(date) { return date.toISOString().slice(0,10); }
+function validISO(v){return typeof v==='string' && /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(parseDate(v).getTime()) && dateISO(parseDate(v))===v;}
+function addDays(iso, days) { const d=parseDate(iso);d.setUTCDate(d.getUTCDate()+days);return dateISO(d); }
+function mondayOf(iso) { const d=parseDate(iso);return addDays(iso,-((d.getUTCDay()+6)%7)); }
+function daysBetween(a,b) { return Math.round((parseDate(b)-parseDate(a))/86400000); }
+function mondayEnd(iso) { return addDays(mondayOf(iso),6); }
+function formatDate(iso,options) {return new Intl.DateTimeFormat('en-US',{timeZone:'UTC',...options}).format(parseDate(iso));}
+function formatEnglishFull(iso){return formatDate(iso,{weekday:'long',month:'long',day:'numeric',year:'numeric'});}
+function formatEnglishShort(iso){return formatDate(iso,{month:'short',day:'numeric',year:'numeric'});}
+function formatMonth(iso){return formatDate(iso,{month:'long',year:'numeric'});}
+function getPhoenixToday() {
+  const parts=new Intl.DateTimeFormat('en-US',{timeZone:'America/Phoenix',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+  const p={};for(const part of parts)p[part.type]=part.value;
+  return `${p.year}-${p.month}-${p.day}`;
+}
+function defaultConfig(){return {starts:[...INITIAL_STARTS],dayOverrides:{},weekOverrides:{},dayFocus:{},weekFocus:{}};}
+function isPlainRecord(a){return a!==null && typeof a==='object' && !Array.isArray(a);}
+function safeMap(v, maxLength){
+  const result={};if(!isPlainRecord(v))return result;
+  for(const [key,value] of Object.entries(v)){
+    if(!validISO(key))continue;
+    if(maxLength){if(typeof value==='string')result[key]=value.slice(0,maxLength);}
+    else if(Number.isInteger(value)&&value>=1&&value<=8)result[key]=value;
+  }
+  return result;
+}
+function validateStarts(starts) {
+  if(!Array.isArray(starts)||starts.length!==8||!starts.every(validISO))return false;
+  return starts.every((v,i)=>i===0||v>starts[i-1]);
+}
+function normalizeConfig(v){
+  if(!isPlainRecord(v))throw new Error('Archivo de configuración no válido.');
+  if(!validateStarts(v.starts))throw new Error('Las fechas de inicio faltan, no son válidas o no están en orden.');
+  return {starts:[...v.starts],dayOverrides:safeMap(v.dayOverrides),weekOverrides:safeMap(v.weekOverrides),dayFocus:safeMap(v.dayFocus,180),weekFocus:safeMap(v.weekFocus,180)};
+}
+let config=defaultConfig();
+let persistenceAvailable=true;
+try { const raw=localStorage.getItem(STORAGE_KEY);if(raw)config=normalizeConfig(JSON.parse(raw)); }
+catch(e){ config=defaultConfig();try{localStorage.setItem('__bchs_storage_test','test');localStorage.removeItem('__bchs_storage_test');}catch(_){persistenceAvailable=false;} }
+const searchParams=new URLSearchParams(window.location.search);
+const queryDate=searchParams.get('date');
+const state={selectedDate:validISO(queryDate)?queryDate:getPhoenixToday(),selectionMode:'day',displayMonth:null,previewId:null,operation:'rotation',rotationAngle:100,projection:false};
+state.displayMonth=state.selectedDate.slice(0,7)+'-01';
+
+function storeConfig(){
+  try { localStorage.setItem(STORAGE_KEY,JSON.stringify(config));$('saveStateText').textContent='Changes saved in this browser';$('saveState').classList.remove('unsaved'); }
+  catch(e){persistenceAvailable=false;$('saveStateText').textContent='Local saving unavailable · export a JSON backup';$('saveState').classList.add('unsaved');}
+}
+if(!persistenceAvailable){$('saveStateText').textContent='Local saving unavailable · export a JSON backup';$('saveState').classList.add('unsaved');}
+function scheduleUnitId(iso){let found=1;for(let i=0;i<8;i++){if(iso>=config.starts[i])found=i+1;else break;}return found;}
+function effectiveAt(iso){
+  if(Object.prototype.hasOwnProperty.call(config.dayOverrides,iso))return {id:config.dayOverrides[iso],source:'DAY OVERRIDE',sourceType:'day'};
+  const week=mondayOf(iso);
+  if(Object.prototype.hasOwnProperty.call(config.weekOverrides,week))return {id:config.weekOverrides[week],source:'WEEK OVERRIDE',sourceType:'week'};
+  return {id:scheduleUnitId(iso),source:'SCHEDULED',sourceType:'schedule'};
+}
+function activeUnitData(){return UNITS[(state.previewId ?? effectiveAt(state.selectedDate).id)-1];}
+function selectedFocus(){
+  const date=state.selectedDate,week=mondayOf(date);
+  if(typeof config.dayFocus[date]==='string'&&config.dayFocus[date].trim())return {text:config.dayFocus[date],source:'CUSTOM FOCUS · DAY'};
+  if(typeof config.weekFocus[week]==='string'&&config.weekFocus[week].trim())return {text:config.weekFocus[week],source:'CUSTOM FOCUS · WEEK'};
+  const unit=activeUnitData();
+  const w=Math.max(0,Math.floor(daysBetween(config.starts[unit.id-1],date)/7));
+  return {text:unit.topics[Math.min(w,unit.topics.length-1)],source:'SUGGESTED WEEKLY FOCUS'};
+}
+function chooseDay(iso){state.selectedDate=iso;state.selectionMode='day';state.previewId=null;state.displayMonth=iso.slice(0,7)+'-01';renderAll();}
+function chooseWeek(iso){state.selectedDate=mondayOf(iso);state.selectionMode='week';state.previewId=null;state.displayMonth=state.selectedDate.slice(0,7)+'-01';renderAll();}
+function moveMonth(n){const d=parseDate(state.displayMonth);d.setUTCMonth(d.getUTCMonth()+n);state.displayMonth=dateISO(d).slice(0,7)+'-01';renderCalendar();}
+function moveWeek(n){const iso=addDays(state.selectedDate,n*7);if(state.selectionMode==='week')chooseWeek(iso);else chooseDay(iso);}
+function renderCalendar(){
+  $('monthName').textContent=formatMonth(state.displayMonth);
+  const year=Number(state.displayMonth.slice(0,4)),month=Number(state.displayMonth.slice(5,7));
+  const monthFirst=`${year}-${String(month).padStart(2,'0')}-01`;
+  const monthLast=dateISO(new Date(Date.UTC(year,month,0,12)));
+  const first=mondayOf(monthFirst),end=mondayEnd(monthLast),today=getPhoenixToday();
+  const selectedWeek=mondayOf(state.selectedDate);
+  const container=$('calendarWeeks');container.replaceChildren();
+  for(let week=first;week<=end;week=addDays(week,7)){
+    const row=document.createElement('div');row.className='calendar-row'+(selectedWeek===week?' is-chosen-week':'');
+    const weekBtn=document.createElement('button');weekBtn.type='button';weekBtn.className='week-pick';weekBtn.textContent='WK';weekBtn.title='Select week beginning '+formatEnglishShort(week);weekBtn.setAttribute('aria-label','Select week of '+formatEnglishShort(week));weekBtn.onclick=()=>chooseWeek(week);row.append(weekBtn);
+    for(let i=0;i<7;i++){
+      const iso=addDays(week,i),d=parseDate(iso);
+      const button=document.createElement('button');button.type='button';button.className='calendar-day';
+      if(d.getUTCMonth()!==month-1)button.classList.add('other-month');
+      if(i>=5)button.classList.add('weekend');
+      if(iso===today)button.classList.add('is-today');
+      if(iso===state.selectedDate&&state.selectionMode==='day')button.classList.add('is-selected');
+      if(Object.prototype.hasOwnProperty.call(config.dayOverrides,iso)||Object.prototype.hasOwnProperty.call(config.weekOverrides,mondayOf(iso)))button.classList.add('has-override');
+      button.textContent=String(d.getUTCDate());button.title=formatEnglishFull(iso)+' · '+UNITS[effectiveAt(iso).id-1].short;
+      button.setAttribute('aria-label',button.title);button.setAttribute('aria-pressed',String(iso===state.selectedDate&&state.selectionMode==='day'));
+      button.onclick=()=>chooseDay(iso);row.append(button);
+    }
+    container.append(row);
+  }
+  const actual=effectiveAt(state.selectedDate);
+  $('selectionModeLabel').textContent=state.selectionMode==='week'?'SELECTED WEEK':'SELECTED DAY';
+  $('selectionMain').textContent=state.selectionMode==='week' ? `${formatDate(mondayOf(state.selectedDate),{month:'long',day:'numeric'})}–${formatEnglishShort(mondayEnd(state.selectedDate))}` :formatEnglishFull(state.selectedDate);
+  $('selectionExtra').textContent=`Unit ${actual.id} · ${UNITS[actual.id-1].short}${actual.sourceType!=='schedule'?' · Manual':''}`;
+  $('headerSelectedDate').textContent=state.selectionMode==='week'?'WEEK OF '+formatDate(state.selectedDate,{month:'short',day:'numeric',year:'numeric'}).toUpperCase():formatDate(state.selectedDate,{month:'short',day:'numeric',year:'numeric'}).toUpperCase();
+  $('calendarStatus').textContent=actual.sourceType==='schedule'?'PLANNED':'MANUAL';
+  $('calendarStatus').style.color=actual.sourceType==='schedule'?'#9fe5d7':'#ffdaa9';
+}
+function renderActive(){
+  const unit=activeUnitData(),actual=effectiveAt(state.selectedDate),focus=selectedFocus();
+  $('activeUnitNumber').textContent='UNIT '+String(unit.id).padStart(2,'0');
+  $('activeSemester').textContent=`SEMESTER ${unit.semester===1?'I':'II'}`;
+  $('activeSource').textContent=state.previewId!==null?'PREVIEW · NOT SAVED':actual.source;
+  $('activeUnitTitle').textContent=unit.title;
+  $('activeDescription').textContent=unit.description;
+  $('activeFocus').textContent=focus.text;
+  $('focusLabel').textContent=focus.source;
+  $('activeTarget').textContent=unit.target;
+  const list=$('activeCriteria');list.replaceChildren();for(const criterion of unit.criteria){const li=document.createElement('li');li.textContent=criterion;list.append(li);}
+  $('activeCampus').textContent=' · '+unit.campus;
+  $('previewReturn').hidden=state.previewId===null;
+  renderDiagram();
+}
+function miniGlyph(id){
+  const drawings={
+    1:'<path d="M4 23 L15 5 L30 23 Z M12 15 L30 15"/><path d="M15 5 L20 16"/>',
+    2:'<path d="M3 22 L10 9 L20 22 Z M24 18 L30 5 L40 18 Z"/><path d="M18 8 L29 8 M25 4 L29 8 L25 12"/>',
+    3:'<path d="M2 23 L8 7 L18 23 Z M25 23 L31 7 L41 23 Z"/><path d="M6 17 L11 17 M29 17 L34 17"/>',
+    4:'<path d="M3 23 L17 4 L39 23 Z M17 4 L21 23 M3 23 L28 13"/>',
+    5:'<path d="M4 23 L10 13 L18 23 Z M16 23 L26 5 L39 23 Z"/>',
+    6:'<path d="M6 24 L6 5 L37 24 Z M6 19 L11 19 L11 24"/>',
+    7:'<circle cx="21" cy="14" r="12"/><path d="M9 14H33 M33 1V27"/>',
+    8:'<path d="M5 11 L24 11 L36 4 L17 4 Z M24 11V26 L36 19 V4 M5 11 V26 H24"/>'
+  };
+  return `<svg class="tile-glyph" viewBox="0 0 43 30" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${drawings[id]}</svg>`;
+}
+function renderRoadmap(){
+  const actual=effectiveAt(state.selectedDate).id;
+  const parent=$('unitTiles');parent.replaceChildren();
+  for(const unit of UNITS){
+    const tile=document.createElement('button');tile.type='button';tile.className='unit-tile';
+    if(unit.id===actual)tile.classList.add('active');
+    if(unit.id===state.previewId)tile.classList.add('preview');
+    tile.setAttribute('aria-label',`Preview Unit ${unit.id}: ${unit.title}`);
+    tile.setAttribute('aria-pressed',String(unit.id===(state.previewId??actual)));
+    const status=unit.id===state.previewId?'PREVIEW':unit.id===actual?'ACTIVE FOR DATE':unit.semester===1?'SEMESTER I':'SEMESTER II';
+    tile.innerHTML=`<div class="tile-top"><span class="tile-id">UNIT ${String(unit.id).padStart(2,'0')}</span>${miniGlyph(unit.id)}</div><div class="tile-title"></div><div class="tile-status"></div>`;
+    tile.querySelector('.tile-title').textContent=unit.short;
+    tile.querySelector('.tile-status').textContent=status;
+    tile.onclick=()=>{state.previewId=unit.id;renderActive();renderRoadmap();};
+    parent.append(tile);
+  }
+}
+
+const GRID_DEFS=`<defs>
+  <pattern id="draftGrid" x="0" y="0" width="35" height="35" patternUnits="userSpaceOnUse"><path d="M 35 0 L 0 0 0 35" fill="none" stroke="#9bbdc9" stroke-width=".75" opacity=".43"/></pattern>
+  <marker id="arrowBlue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#1478a5"/></marker>
+  <marker id="arrowCoral" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#eb7f68"/></marker>
+  </defs>`;
+function svgWrap(content,label){return `<svg viewBox="0 0 540 330" role="img" aria-label="${label}" xmlns="http://www.w3.org/2000/svg">${GRID_DEFS}<rect width="540" height="330" fill="url(#draftGrid)"/>${content}</svg>`;}
+const textAt=(x,y,t,fill='#204b65',size=16,weight=750,anchor='start')=>`<text x="${x}" y="${y}" fill="${fill}" font-size="${size}" font-weight="${weight}" text-anchor="${anchor}" font-family="Arial,sans-serif">${t}</text>`;
+function poly(points,fill,stroke,sw=4){return `<polygon points="${points.map(p=>p.join(',')).join(' ')}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}" stroke-linejoin="round"/>`;}
+function point(x,y,fill='#1478a5'){return `<circle cx="${x}" cy="${y}" r="4.6" fill="${fill}" stroke="#fff" stroke-width="1.5"/>`;}
+function axes(cx,cy){return `<path d="M26 ${cy}H511 M${cx} 303V20" stroke="#759fae" stroke-width="2" stroke-dasharray="5 5"/><path d="M511 ${cy}l-8 -5v10z M${cx} 20l-5 8h10z" fill="#759fae"/>${point(cx,cy,'#657b8e')}${textAt(517,cy+18,'x','#617e8c',13)}${textAt(cx+12,24,'y','#617e8c',13)}${textAt(cx+7,cy+18,'O','#617e8c',11)}`;}
+const TRANSFORM_POINTS=[[1,1],[4,1],[2,3]];
+function plotPoints(pts,cx=270,cy=164,scale=34){return pts.map(([x,y])=>[+(cx+x*scale).toFixed(2),+(cy-y*scale).toFixed(2)]);}
+function labeledTriangle(pts,prefix,color,fill,shifts){
+  return poly(pts,fill,color)+pts.map(([x,y],i)=>point(x,y,color)+textAt(x+(shifts?.[i]?.[0]??8),y+(shifts?.[i]?.[1]??-7),`${['A','B','C'][i]}${prefix}`,color,15,800)).join('');
+}
+function transformDiagram(){
+  const kind=state.operation, pts=TRANSFORM_POINTS;
+  let content='',caption='',tag='Rigid motions';
+  if(kind==='translation'){
+    const orig=plotPoints(pts,218,192,34), shifted=plotPoints(pts.map(([x,y])=>[x+2,y-1]),218,192,34);
+    content=axes(218,192)+labeledTriangle(orig,'','#1486ac','rgba(28,164,212,.15)')+labeledTriangle(shifted,'′','#ec7e63','rgba(236,126,99,.13)',[[9,-9],[8,-9],[8,-9]])+`<path d="M${orig[0][0]} ${orig[0][1]}L${shifted[0][0]} ${shifted[0][1]}" stroke="#1478a5" stroke-width="3" stroke-dasharray="7 5" marker-end="url(#arrowBlue)"/>`+textAt(350,68,'v = (2, −1)','#1a6f86',19,850);
+    caption='Translation rule: (x, y) → (x + 2, y − 1)';tag='Slide · translate';
+  } else if(kind==='reflection'){
+    const orig=plotPoints(pts,270,165,34),refl=plotPoints(pts.map(([x,y])=>[-x,y]),270,165,34);
+    content=axes(270,165)+`<path d="M270 22V306" stroke="#d77e5a" stroke-width="4" stroke-dasharray="8 5"/>`+labeledTriangle(orig,'','#1486ac','rgba(28,164,212,.16)')+labeledTriangle(refl,'′','#ec7e63','rgba(236,126,99,.14)',[[-25,-8],[-22,-8],[-25,-9]])+textAt(280,35,'mirror: y-axis','#b96c4c',15,800);
+    caption='Reflection in y-axis: (x, y) → (−x, y)';tag='Flip · reflect';
+  } else {
+    const theta=state.rotationAngle*Math.PI/180;
+    const rotated=pts.map(([x,y])=>[x*Math.cos(theta)-y*Math.sin(theta),x*Math.sin(theta)+y*Math.cos(theta)]);
+    const o=plotPoints(pts,270,165,34),p=plotPoints(rotated,270,165,34);
+    content=axes(270,165)+`<path d="M270 165L${o[0][0]} ${o[0][1]} M270 165L${p[0][0]} ${p[0][1]}" fill="none" stroke="#8f9fb0" stroke-width="2" stroke-dasharray="4 5"/>`+labeledTriangle(o,'','#1486ac','rgba(28,164,212,.16)')+labeledTriangle(p,'′','#ec7e63','rgba(236,126,99,.13)')+textAt(36,31,`${state.rotationAngle}° CCW`,'#b85f4c',20,850);
+    const a=rotated[0];
+    const format=n=>{const fixed=(Math.abs(n)<0.005?0:n).toFixed(2);return fixed.replace('-', '−');};
+    caption=`Rotate ${state.rotationAngle}° about O: A(1, 1) → A′(${format(a[0])}, ${format(a[1])})`;
+    tag='Turn · rotate';
+  }
+  return {svg:svgWrap(content,`${kind} of triangle on coordinate plane`),caption,tag};
+}
+function diagramForUnit(unit){
+  if(unit.id===2)return transformDiagram();
+  let c='',caption='',tag='Geometric reasoning';
+  switch(unit.id){
+    case 1:
+      c=poly([[114,240],[402,240],[258,96]],'rgba(34,150,180,.11)','#168ab0',4)+
+        `<path d="M244 110l14 14l14 -14" fill="none" stroke="#ec8066" stroke-width="3"/><path d="M138 239a24 24 0 0 1 7-17 M381 226a23 23 0 0 1 6 14" fill="none" stroke="#d88960" stroke-width="3"/>`+
+        point(114,240)+point(402,240)+point(258,96)+textAt(96,261,'A')+textAt(411,261,'B')+textAt(251,83,'C')+textAt(169,224,'45°','#b75c46',22,850)+textAt(338,224,'45°','#b75c46',22,850)+textAt(258,153,'90°','#b75c46',19,850,'middle')+textAt(269,298,'45° + 45° + 90° = 180°','#245771',18,800,'middle');
+      caption='Triangle interior angles sum to 180°';tag='Measure · construct';break;
+    case 3:
+      c=labeledTriangle([[72,240],[205,240],[115,91]],'','#1486ac','rgba(20,136,172,.13)')+
+        labeledTriangle([[320,240],[453,240],[363,91]],'′','#eb7f68','rgba(235,127,104,.13)')+
+        `<path d="M137 232v17 M385 232v17 M88 159l15 7 M337 159l15 7" stroke="#2c6174" stroke-width="3.5"/>`+
+        textAt(262,62,'≅','#32788c',38,800,'middle')+textAt(268,296,'same shape + same size','#2c647a',19,800,'middle');
+      caption='Triangle congruence: SSS · SAS · ASA · AAS · HL (under their conditions)';tag='Prove congruence';break;
+    case 4:
+      c=poly([[102,245],[436,245],[230,65]],'rgba(27,147,172,.11)','#1285a8')+
+        `<path d="M230 65L269 245 M102 245L333 155 M436 245L166 155" stroke="#ed8e67" stroke-width="3" stroke-dasharray="7 5"/>`+
+        point(102,245)+point(436,245)+point(230,65)+point(269,245,'#ec8765')+point(256,185,'#ec8765')+
+        textAt(85,266,'A')+textAt(439,266,'B')+textAt(220,54,'C')+textAt(273,266,'M','#b86a4e')+textAt(263,178,'G','#bb6850',17,850)+textAt(267,302,'Medians meet at the centroid G','#2b6174',18,800,'middle');
+      caption='Triangle centers and special segments';tag='Classify · justify';break;
+    case 5:
+      c=`<path d="M140 275L204 235 M140 275L316 235 M140 275L236 139" fill="none" stroke="#91aab9" stroke-width="2" stroke-dasharray="7 5"/>`+
+        poly([[180,250],[250,250],[200,190]],'rgba(20,136,172,.20)','#168ab0')+
+        poly([[204,235],[316,235],[236,139]],'rgba(235,127,104,.12)','#ec8569')+
+        point(140,275,'#6e7e8f')+textAt(120,292,'O','#637c88',16)+textAt(365,116,'k = 1.6','#b9654f',22,850)+textAt(270,302,'Corresponding sides are proportional','#2b6477',18,800,'middle');
+      caption='Dilation: image length = k × original length';tag='Scale · model';break;
+    case 6:
+      c=poly([[138,258],[378,258],[138,78]],'rgba(24,144,185,.14)','#1386a9',5)+
+        `<path d="M138 236H160V258" fill="none" stroke="#ec8969" stroke-width="4"/>`+
+        textAt(265,289,'4','#176e85',25,850)+textAt(97,172,'3','#176e85',25,850)+textAt(290,153,'5','#cc6f59',26,850)+textAt(263,45,'a² + b² = c²','#286377',24,850,'middle');
+      caption='Pythagorean theorem: 3² + 4² = 5²';tag='Measure · solve';break;
+    case 7:
+      c=`<circle cx="262" cy="166" r="112" fill="rgba(23,146,183,.10)" stroke="#167fa4" stroke-width="4"/>`+
+        `<path d="M150 166H374 M374 28V305 M204 69L343 257" fill="none" stroke="#e38767" stroke-width="3"/>`+
+        `<path d="M262 166L374 166" stroke="#167fa4" stroke-width="4"/>`+
+        point(262,166)+point(374,166,'#ec8164')+textAt(250,186,'O')+textAt(317,157,'r','#176d85',21,850)+textAt(388,56,'tangent','#b65e48',16,800)+textAt(193,297,'C = 2πr     A = πr²','#28677a',22,850);
+      caption='Circle measurements and tangent relationships';tag='Arcs · circles';break;
+    case 8:
+      c=`<polygon points="144,110 326,110 396,60 213,60" fill="rgba(29,183,173,.28)" stroke="#157e9b" stroke-width="3"/>`+
+        `<polygon points="326,110 396,60 396,218 326,269" fill="rgba(245,163,113,.20)" stroke="#157e9b" stroke-width="3"/>`+
+        `<polygon points="144,110 326,110 326,269 144,269" fill="rgba(25,136,184,.18)" stroke="#157e9b" stroke-width="3"/>`+
+        `<path d="M213 60V217L144 269 M213 217L396 218" fill="none" stroke="#548e9e" stroke-width="2" stroke-dasharray="6 5"/>`+
+        textAt(234,289,'l','#176b89',22,850)+textAt(345,91,'w','#176b89',22,850)+textAt(342,198,'h','#c7754f',22,850)+textAt(267,35,'V = l × w × h','#27687c',23,850,'middle');
+      caption='Volume is measured in cubic units (units³)';tag='Area · volume';break;
+  }
+  return {svg:svgWrap(c,unit.title+' schematic illustration'),caption,tag};
+}
+function renderDiagram(){
+  const unit=activeUnitData(),result=diagramForUnit(unit);
+  $('diagramStage').innerHTML=result.svg;
+  $('diagramFooter').textContent=result.caption;
+  $('diagramTag').textContent=result.tag;
+  $('operationControls').hidden=unit.id!==2;
+  if(unit.id===2){
+    for(const b of document.querySelectorAll('[data-operation]')){
+      const isOn=b.dataset.operation===state.operation;b.classList.toggle('on',isOn);b.setAttribute('aria-pressed',String(isOn));
+    }
+    $('rotationControls').hidden=state.operation!=='rotation';
+    $('rotationSlider').value=String(state.rotationAngle);
+    $('rotationValue').textContent=state.rotationAngle+'°';
+  }
+}
+function renderAll(){renderCalendar();renderActive();renderRoadmap();refreshEditor();}
+function showNotice(text,isError=false){const n=$('notice');n.hidden=false;n.className='notice'+(isError?' error':'');n.textContent=text;}
+function openTeacher(){
+  $('teacherDrawer').hidden=false;$('drawerBackdrop').hidden=false;document.body.style.overflow='hidden';refreshEditor();$('closeTeacherBtn').focus();
+}
+function closeTeacher(){ $('teacherDrawer').hidden=true;$('drawerBackdrop').hidden=true;document.body.style.overflow='';$('notice').hidden=true;$('openTeacherBtn').focus(); }
+function refreshEditor(){
+  const active=effectiveAt(state.selectedDate),selected=UNITS[active.id-1];
+  $('drawerSelectionLabel').textContent=state.selectionMode==='day'?`Día: ${formatEnglishFull(state.selectedDate)}`:`Semana: ${formatEnglishShort(mondayOf(state.selectedDate))} – ${formatEnglishShort(mondayEnd(state.selectedDate))}`;
+  $('manualUnitSelect').value=String(active.id);
+  const future=active.id<8?UNITS[active.id]:null;
+  $('shiftExplanation').textContent=future?`Unidad actual: ${selected.short}. La siguiente es la Unidad ${future.id} (${future.short}), prevista para el ${formatEnglishShort(config.starts[future.id-1])}. Puede mover ese inicio y los posteriores, conservando la unidad actual.`:'La Unidad 8 es la última del curso; para modificar su fecha, edite los inicios a continuación.';
+  $('delayBtn').disabled=!future;$('advanceBtn').disabled=!future;
+  const inputKey=state.selectionMode==='day'?state.selectedDate:mondayOf(state.selectedDate);
+  const stored=state.selectionMode==='day'?config.dayFocus[inputKey]:config.weekFocus[inputKey];
+  $('focusInput').value=typeof stored==='string'?stored:'';
+  $('focusInputLabel').textContent=state.selectionMode==='day'?'Enfoque del día seleccionado':'Enfoque de la semana seleccionada';
+  const dates=$('dateEditor');dates.replaceChildren();
+  for(const unit of UNITS){
+    const row=document.createElement('div');row.className='date-edit-row';
+    const label=document.createElement('label');label.htmlFor='startDate'+unit.id;label.textContent=`U${unit.id} · ${unit.short}`;
+    const date=document.createElement('input');date.type='date';date.id='startDate'+unit.id;date.className='form-input';date.value=config.starts[unit.id-1];
+    row.append(label,date);dates.append(row);
+  }
+}
+function saveAssignment(kind){
+  const id=Number($('manualUnitSelect').value);if(!UNITS[id-1])return;
+  if(kind==='day'){config.dayOverrides[state.selectedDate]=id;}
+  else {config.weekOverrides[mondayOf(state.selectedDate)]=id;}
+  storeConfig();renderAll();showNotice(`Unidad ${id} asignada ${kind==='day'?'al día':'a la semana'} seleccionado.`);
+}
+function clearAssignment(){
+  const date=state.selectedDate,week=mondayOf(date);
+  if(state.selectionMode==='week'){delete config.weekOverrides[week];}
+  else {delete config.dayOverrides[date];if(!config.dayOverrides[date])delete config.weekOverrides[week];}
+  storeConfig();renderAll();showNotice('Se restableció la unidad automática para la selección.');
+}
+function shiftFuture(direction){
+  const id=effectiveAt(state.selectedDate).id;if(id===8)return;
+  const changed=[...config.starts];
+  for(let i=id;i<8;i++)changed[i]=addDays(changed[i],direction*7);
+  if(!validateStarts(changed)){showNotice('No se pueden adelantar esas unidades: se superpondrían con un inicio anterior. Edite las fechas manualmente.',true);return;}
+  config.starts=changed;storeConfig();renderAll();showNotice(`El inicio de la Unidad ${id+1} y las siguientes se ${direction===1?'retrasó':'adelantó'} 7 días.`);
+}
+function saveFocus(){
+  const value=$('focusInput').value.trim().slice(0,180),week=mondayOf(state.selectedDate);
+  if(state.selectionMode==='day'){if(value)config.dayFocus[state.selectedDate]=value;else delete config.dayFocus[state.selectedDate];}
+  else {if(value)config.weekFocus[week]=value;else delete config.weekFocus[week];}
+  storeConfig();renderAll();showNotice(value?'Enfoque guardado en esta computadora.':'Se recuperó el enfoque sugerido.');
+}
+function clearFocus(){
+  const week=mondayOf(state.selectedDate);
+  if(state.selectionMode==='day')delete config.dayFocus[state.selectedDate];else delete config.weekFocus[week];
+  storeConfig();renderAll();showNotice('Enfoque manual eliminado; vuelve a aparecer la sugerencia.');
+}
+function saveDates(){
+  const starts=UNITS.map(u=>$('startDate'+u.id).value);
+  if(!validateStarts(starts)){showNotice('Verifique las fechas: todas deben ser válidas y cada unidad debe comenzar después de la anterior.',true);return;}
+  config.starts=starts;storeConfig();renderAll();showNotice('Fechas de inicio actualizadas. La pantalla ya está sincronizada con la nueva programación.');
+}
+function exportConfig(){
+  const data={application:'BCHS Geometry Interactive Syllabus',version:1,exportedAt:new Date().toISOString(),...config};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='BCHS_Geometry_Syllabus_Ajustes.json';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  showNotice('Se descargó una copia de seguridad JSON con fechas, asignaciones y enfoques.');
+}
+function importConfig(event){
+  const file=event.target.files?.[0];if(!file)return;
+  const reader=new FileReader();reader.onload=()=>{
+    try { const parsed=JSON.parse(String(reader.result));config=normalizeConfig(parsed);storeConfig();state.previewId=null;renderAll();showNotice('Configuración importada y aplicada correctamente.'); }
+    catch(e){showNotice('No se pudo importar: '+e.message,true);}
+    finally{event.target.value='';}
+  };
+  reader.onerror=()=>{showNotice('No se pudo leer el archivo.',true);event.target.value='';};reader.readAsText(file);
+}
+function resetConfig(){
+  if(!window.confirm('¿Restaurar las fechas provisionales y eliminar TODAS las asignaciones y enfoques personalizados guardados en este navegador?'))return;
+  config=defaultConfig();storeConfig();state.previewId=null;renderAll();showNotice('Se restauró la programación inicial del prototipo.');
+}
+async function toggleProjection(){
+  if(!document.fullscreenElement){
+    try{await document.documentElement.requestFullscreen();}catch(e){showNotice('Su navegador bloqueó la pantalla completa. Puede utilizar F11.',true);return;}
+  }else{try{await document.exitFullscreen();}catch(e){}}
+}
+document.addEventListener('fullscreenchange',()=>{
+  state.projection=Boolean(document.fullscreenElement);document.body.classList.toggle('is-projection',state.projection);
+  $('projectionLabel').textContent=state.projection?'Salir de pantalla completa':'Presentación';
+});
+
+for(const unit of UNITS){const opt=document.createElement('option');opt.value=unit.id;opt.textContent=`Unidad ${unit.id} · ${unit.short}`;$('manualUnitSelect').append(opt);}
+$('prevMonthBtn').addEventListener('click',()=>moveMonth(-1));
+$('nextMonthBtn').addEventListener('click',()=>moveMonth(1));
+$('prevWeekBtn').addEventListener('click',()=>moveWeek(-1));
+$('nextWeekBtn').addEventListener('click',()=>moveWeek(1));
+$('todayCalendarBtn').addEventListener('click',()=>chooseDay(getPhoenixToday()));
+$('todayTopBtn').addEventListener('click',()=>chooseDay(getPhoenixToday()));
+$('openTeacherBtn').addEventListener('click',openTeacher);
+$('closeTeacherBtn').addEventListener('click',closeTeacher);
+$('drawerBackdrop').addEventListener('click',closeTeacher);
+$('assignDayBtn').addEventListener('click',()=>saveAssignment('day'));
+$('assignWeekBtn').addEventListener('click',()=>saveAssignment('week'));
+$('clearOverrideBtn').addEventListener('click',clearAssignment);
+$('delayBtn').addEventListener('click',()=>shiftFuture(1));
+$('advanceBtn').addEventListener('click',()=>shiftFuture(-1));
+$('saveFocusBtn').addEventListener('click',saveFocus);
+$('clearFocusBtn').addEventListener('click',clearFocus);
+$('saveDatesBtn').addEventListener('click',saveDates);
+$('exportBtn').addEventListener('click',exportConfig);
+$('importBtn').addEventListener('click',()=>$('importFile').click());
+$('importFile').addEventListener('change',importConfig);
+$('resetBtn').addEventListener('click',resetConfig);
+$('projectionBtn').addEventListener('click',toggleProjection);
+$('previewReturn').addEventListener('click',()=>{state.previewId=null;renderAll();});
+document.querySelectorAll('[data-operation]').forEach(btn=>btn.addEventListener('click',()=>{state.operation=btn.dataset.operation;renderDiagram();}));
+$('rotationSlider').addEventListener('input',e=>{state.rotationAngle=Number(e.target.value);renderDiagram();});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&!$('teacherDrawer').hidden){e.preventDefault();closeTeacher();}
+  if($('teacherDrawer').hidden && !['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName) && e.altKey && (e.key==='ArrowLeft'||e.key==='ArrowRight')){e.preventDefault();moveWeek(e.key==='ArrowRight'?1:-1);}
+});
+renderAll();
+</script>
+</body>
+</html>
