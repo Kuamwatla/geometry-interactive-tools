@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Rigid Motions of a Triangle | Interactive Geometry Lab</title>
+<style>
+  :root { --ink:#16253c; --muted:#65738a; --line:#dbe4f1; --blue:#2563eb; --blue-soft:#eaf1ff; --orange:#e97821; --orange-soft:#fff0df; --violet:#8053cc; --violet-soft:#f1eaff; --bg:#edf2f9; --paper:#fff; --green:#16735e; }
+  * { box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  body { margin:0; min-height:100vh; color:var(--ink); background:radial-gradient(circle at 10% 0%,#dfe9fb 0%,transparent 37%),var(--bg); font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; }
+  button, input, select { font:inherit; }
+  button { cursor:pointer; }
+  button:focus-visible, input:focus-visible, select:focus-visible { outline:3px solid #85b7ff; outline-offset:2px; }
+  .app { max-width:1600px; margin:0 auto; padding:19px clamp(14px,2.3vw,33px) 26px; }
+  .masthead { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin:0 0 17px; }
+  .eyebrow { display:flex; align-items:center; gap:8px; margin:0 0 3px; font-size:11px; letter-spacing:1.6px; font-weight:800; color:#4e6c9b; }
+  .eyebrow .dot { width:8px; height:8px; background:#3ca796; border-radius:50%; box-shadow:0 0 0 3px #dcf6ef; }
+  h1 { margin:0; font-weight:790; letter-spacing:-.035em; font-size:clamp(25px,2.6vw,36px); line-height:1.18; }
+  .subhead { color:var(--muted); font-size:13px; margin:6px 0 0; }
+  .header-actions { display:flex; align-items:center; flex-wrap:wrap; justify-content:flex-end; gap:8px; }
+  .btn { border:1px solid var(--line); background:#fff; border-radius:10px; padding:9px 12px; display:inline-flex; gap:7px; align-items:center; justify-content:center; color:#34506f; font-weight:680; font-size:12px; transition:.16s ease; box-shadow:0 1px 3px #1d34580a; }
+  .btn:hover { background:#f4f8ff; border-color:#b8cdec; transform:translateY(-1px); }
+  .btn-primary { background:var(--ink); color:white; border-color:var(--ink); }
+  .btn-primary:hover { background:#294269; color:white; }
+  .workspace { display:grid; grid-template-columns:minmax(0,1fr) minmax(335px,370px); gap:18px; align-items:start; }
+  .stage-card, .panel { background:#fff; border:1px solid #e3eaf5; border-radius:17px; box-shadow:0 8px 30px #233f6610; overflow:hidden; }
+  .stage-card { min-width:0; }
+  .stage-top { padding:13px 15px; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
+  .tabs { display:flex; background:#edf3fc; gap:4px; padding:4px; border-radius:12px; }
+  .tab { background:transparent; border:0; padding:10px 14px; font-size:13px; border-radius:9px; color:#536680; font-weight:730; transition:.15s; }
+  .tab:hover { color:var(--blue); background:#e2ebff; }
+  .tab[aria-pressed="true"] { background:var(--ink); color:#fff; box-shadow:0 3px 8px #11294a21; }
+  .mini-tools { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .tool-toggle { display:flex; align-items:center; gap:5px; color:#536780; font-size:12px; font-weight:620; cursor:pointer; white-space:nowrap; }
+  .tool-toggle input { accent-color:var(--blue); width:15px; height:15px; cursor:pointer; }
+  .plot-wrap { position:relative; padding:0; background:#f9fbff; overflow:hidden; }
+  #plane { width:100%; display:block; touch-action:none; user-select:none; aspect-ratio:960/650; background:#f9fbff; }
+  .shape-original { cursor:grab; }
+  .shape-image { cursor:grab; }
+  .axis-hit { cursor:move; }
+  .handle { cursor:grab; }
+  #plane.dragging, #plane.dragging * { cursor:grabbing!important; }
+  .plot-corner { position:absolute; top:12px; left:13px; background:#fffdf9eb; border:1px solid #dee5ee; border-radius:8px; padding:5px 9px; font-size:10px; letter-spacing:.4px; font-weight:730; color:#60738c; pointer-events:none; }
+  .key { position:absolute; bottom:11px; left:13px; display:flex; align-items:center; gap:11px; flex-wrap:wrap; font-size:11px; font-weight:770; color:#45546e; background:#ffffffec; border:1px solid #dbe6f4; border-radius:9px; padding:7px 10px; pointer-events:none; }
+  .key-item { display:flex; gap:5px; align-items:center; }
+  .key-item[hidden] { display:none!important; }
+  .swatch { width:9px; height:9px; border-radius:50%; background:var(--blue); }
+  .swatch.image { background:var(--orange); }
+  .swatch.axis { background:var(--violet); }
+  .drag-help { min-height:45px; border-top:1px solid var(--line); background:#f9fbff; padding:10px 16px; color:#576b86; font-size:12px; display:flex; gap:9px; align-items:center; }
+  .drag-help .tip-icon { width:21px; height:21px; border:1px solid #c9d9ed; color:#4678ba; background:#eef5ff; display:grid; place-items:center; border-radius:50%; font-weight:800; font-size:12px; flex-shrink:0; }
+  .coordinates { padding:13px 17px 17px; }
+  .section-row { display:flex; justify-content:space-between; align-items:baseline; gap:8px; margin-bottom:7px; }
+  .section-row h2, .panel-heading h2 { margin:0; font-size:14px; font-weight:800; letter-spacing:-.01em; }
+  .section-row small { color:var(--muted); font-size:11px; }
+  table { width:100%; border-collapse:collapse; font-size:13px; font-variant-numeric:tabular-nums; }
+  th { font-size:11px; color:#74829b; text-align:left; text-transform:uppercase; letter-spacing:.6px; padding:6px 8px; background:#f4f7fc; }
+  td { padding:7px 8px; border-bottom:1px solid #edf1f8; }
+  tr:last-child td { border-bottom:0; }
+  th:first-child, td:first-child { width:16%; font-weight:800; }
+  th:nth-child(2), td:nth-child(2) { color:#1a5cc2; }
+  th:nth-child(3), td:nth-child(3) { color:#c66d15; font-weight:730; }
+  .sidebar { display:grid; gap:14px; min-width:0; }
+  .panel { padding:17px; }
+  .panel-heading { display:flex; align-items:center; gap:9px; margin:0 0 13px; }
+  .number-badge { display:grid; place-items:center; width:24px; height:24px; border-radius:7px; color:#3365a6; background:#eaf2ff; font-size:11px; font-weight:850; }
+  .field { display:flex; flex-direction:column; gap:5px; min-width:0; }
+  .field > span { font-size:11px; font-weight:770; color:#5c6980; }
+  .field input:not([type="range"]), .field select { border:1px solid #d4e0ee; border-radius:9px; padding:10px 10px; background:#fff; color:#1e324c; width:100%; min-width:0; height:40px; font-variant-numeric:tabular-nums; }
+  input[type=number] { appearance:textfield; -moz-appearance:textfield; }
+  input[type=number]::-webkit-outer-spin-button, input[type=number]::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
+  .fields-2 { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+  .fields-4 { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:7px; }
+  .field input[type=range] { accent-color:var(--blue); cursor:pointer; width:100%; margin:9px 0 3px; }
+  .control-stack { display:grid; gap:13px; }
+  .control-note { color:#6a7890; font-size:11px; line-height:1.42; margin:10px 0 0; }
+  .separator { height:1px; background:#e9eef6; margin:14px 0; }
+  .presets { display:flex; gap:6px; flex-wrap:wrap; }
+  .preset { border:1px solid #d6e2f3; background:#f7faff; color:#4c668a; border-radius:8px; padding:7px 9px; font-size:11px; font-weight:760; }
+  .preset:hover { border-color:#96b9ec; color:#1e5cc4; }
+  .formula-panel { background:linear-gradient(145deg,#132540,#203c64); border-color:#253e64; color:#fff; }
+  .formula-panel .panel-heading .number-badge { background:#324a6f; color:#b5d2ff; }
+  .formula-panel .panel-heading h2 { color:white; }
+  .formula-name { color:#acd0ff; letter-spacing:.8px; font-size:10px; text-transform:uppercase; font-weight:850; margin:0 0 9px; }
+  .formula-lines { font:500 clamp(15px,1.5vw,18px)/1.66 "Cambria Math",Cambria,Georgia,serif; letter-spacing:.03em; background:#ffffff0d; padding:12px 14px; border:1px solid #ffffff23; border-radius:10px; overflow-wrap:anywhere; }
+  .formula-lines div { white-space:normal; }
+  .formula-def { color:#c8daf3; font-size:12px; margin:10px 0 0; }
+  .worked { margin-top:15px; padding-top:13px; border-top:1px solid #ffffff30; }
+  .worked strong { display:block; color:#c4dbff; font-size:10px; text-transform:uppercase; letter-spacing:.9px; margin:0 0 6px; }
+  .worked-example { font:500 13px/1.65 "Cambria Math",Cambria,Georgia,serif; color:#f0f6ff; overflow-wrap:anywhere; }
+  .coord-edit { display:grid; grid-template-columns:28px 1fr 1fr; gap:7px; align-items:center; margin-bottom:9px; }
+  .coord-edit label { font-size:12px; color:var(--blue); font-weight:900; }
+  .coord-edit input { width:100%; min-width:0; padding:8px 9px; border:1px solid #d5e0ef; border-radius:8px; height:37px; font-size:13px; font-variant-numeric:tabular-nums; }
+  .coord-titles { display:grid; grid-template-columns:28px 1fr 1fr; gap:7px; color:#7c8ba1; font-size:10px; text-align:center; font-weight:750; padding-bottom:6px; }
+  .fact-row { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:10px 0; }
+  .fact { border:1px solid #e0e9f5; border-radius:10px; padding:8px 10px; background:#f9fbff; }
+  .fact span { display:block; font-size:10px; color:#71819a; font-weight:780; text-transform:uppercase; letter-spacing:.45px; }
+  .fact b { font-variant-numeric:tabular-nums; font-size:16px; color:#223c62; }
+  .fact b small { color:#7c8a9d; font-size:11px; font-weight:650; }
+  .status { display:flex; align-items:flex-start; gap:8px; background:#edf8f4; padding:11px 12px; border:1px solid #cde8de; color:#1a705d; border-radius:10px; font-size:11px; font-weight:670; margin-top:10px; }
+  .status .check { flex-shrink:0; font-weight:900; font-size:14px; }
+  .footer { margin-top:13px; color:#7b8ba2; font-size:11px; display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+  .status-toast { position:fixed; bottom:18px; right:20px; background:#172e4f; border:1px solid #3d5d86; color:white; padding:10px 14px; border-radius:9px; z-index:20; box-shadow:0 12px 25px #102b502b; opacity:0; transform:translateY(8px); transition:.25s; pointer-events:none; font-size:12px; }
+  .status-toast.show { opacity:1; transform:translateY(0); }
+  dialog { max-width:560px; border:1px solid #dbe6f4; border-radius:18px; box-shadow:0 30px 85px #14233d50; padding:25px; }
+  dialog::backdrop { background:#0a1b30a8; }
+  dialog h2 { margin:0 0 8px; font-size:21px; }
+  dialog p, dialog li { color:#465875; line-height:1.6; font-size:14px; }
+  dialog ol { padding-left:20px; }
+  .dialog-end { display:flex; justify-content:flex-end; margin-top:20px; }
+  .stage-card:fullscreen { width:100vw; height:100vh; border-radius:0; display:flex; flex-direction:column; background:white; }
+  .stage-card:fullscreen .plot-wrap { flex:1; min-height:0; display:flex; align-items:center; justify-content:center; }
+  .stage-card:fullscreen #plane { width:auto; height:100%; max-width:100%; max-height:100%; aspect-ratio:960/650; }
+  .stage-card:fullscreen .coordinates { padding:8px 18px 9px; }
+  .stage-card:fullscreen .coordinates table td { padding:4px 8px; }
+  .stage-card:fullscreen .plot-corner { left:max(14px,calc((100% - 148vh)/2 + 10px)); }
+  @media (max-width:980px) { .workspace { grid-template-columns:1fr; } .sidebar { grid-template-columns:repeat(2,minmax(0,1fr)); } .formula-panel { grid-row:span 2; } }
+  @media (max-width:610px) { .app { padding:13px 9px 20px; } .masthead { flex-direction:column; } .header-actions { justify-content:flex-start; } .sidebar { grid-template-columns:1fr; } .formula-panel { grid-row:auto; } .tabs { width:100%; } .tab { flex:1; padding:9px 5px; font-size:12px; } .stage-top { padding:9px; } .mini-tools { font-size:11px; } .plot-corner { display:none; } .key { left:6px; bottom:6px; padding:5px 6px; font-size:10px; gap:7px; } .coordinates { padding:11px 8px; } th,td { padding:6px 4px; } }
+  @media (prefers-reduced-motion:reduce) { *,*:before,*:after { transition:none!important; } }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <header class="masthead">
+    <div>
+      <div class="eyebrow"><span class="dot"></span><span data-i18n="eyebrow">INTERACTIVE GEOMETRY LAB</span></div>
+      <h1 data-i18n="title">Rigid Motions of a Triangle</h1>
+      <p class="subhead" data-i18n="subtitle">Explore translations, reflections, and rotations on the coordinate plane.</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn" id="btn-language" aria-label="Change language" title="English / Español">🌐 <span id="lang-label">ESPAÑOL</span></button>
+      <button class="btn" id="btn-help"><span>?</span> <span data-i18n="help">How to use</span></button>
+      <button class="btn" id="btn-export">↓ <span data-i18n="export">Save image</span></button>
+      <button class="btn btn-primary" id="btn-fullscreen">⛶ <span data-i18n="fullscreen">Projector view</span></button>
+    </div>
+  </header>
+  <main class="workspace">
+    <section class="stage-card" id="stage-card" aria-label="Interactive coordinate plane">
+      <div class="stage-top">
+        <div class="tabs" role="group" aria-label="Choose a rigid motion">
+          <button type="button" class="tab" data-mode="translate" aria-pressed="true" data-i18n="translate">Translation</button>
+          <button type="button" class="tab" data-mode="reflect" aria-pressed="false" data-i18n="reflect">Reflection</button>
+          <button type="button" class="tab" data-mode="rotate" aria-pressed="false" data-i18n="rotate">Rotation</button>
+        </div>
+        <div class="mini-tools">
+          <label class="tool-toggle"><input type="checkbox" id="snap-toggle" checked> <span data-i18n="snap">Snap</span></label>
+          <label class="tool-toggle"><input type="checkbox" id="grid-toggle" checked> <span data-i18n="grid">Grid</span></label>
+          <label class="tool-toggle"><input type="checkbox" id="labels-toggle" checked> <span data-i18n="labels">Labels</span></label>
+          <button type="button" class="btn" id="btn-reset" title="Reset">↺ <span data-i18n="reset">Reset</span></button>
+        </div>
+      </div>
+      <div class="plot-wrap" id="plot-wrap">
+        <svg id="plane" viewBox="0 0 960 650" xmlns="http://www.w3.org/2000/svg" aria-label="Draggable triangles and coordinate grid">
+          <defs>
+            <marker id="arrow-orange" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0 0 L6 3 L0 6Z" fill="#e97821"/></marker>
+            <marker id="arrow-purple" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0 0 L6 3 L0 6Z" fill="#8053cc"/></marker>
+          </defs>
+          <g id="grid-layer"></g>
+          <g id="guide-layer"></g>
+          <g id="figure-layer"></g>
+        </svg>
+        <div class="plot-corner" data-i18n="unit">1 SQUARE = 1 UNIT</div>
+        <div class="key">
+          <span class="key-item"><span class="swatch"></span> <span data-i18n="original">Original</span> ABC</span>
+          <span class="key-item"><span class="swatch image"></span> <span data-i18n="image">Image</span> A′B′C′</span>
+          <span class="key-item" id="mirror-key" hidden><span class="swatch axis"></span> <span data-i18n="mirrorAxis">Mirror line</span> ℓ</span>
+        </div>
+      </div>
+      <div class="drag-help"><span class="tip-icon">↔</span><span id="drag-instructions"></span></div>
+      <div class="coordinates">
+        <div class="section-row"><h2 data-i18n="coordinates">Live Coordinates</h2><small data-i18n="updated">Updates as you drag</small></div>
+        <table><thead><tr><th data-i18n="vertex">Vertex</th><th data-i18n="preimage">Pre-image (x, y)</th><th data-i18n="result">Image (x′, y′)</th></tr></thead><tbody id="coord-table"></tbody></table>
+      </div>
+    </section>
+    <aside class="sidebar">
+      <section class="panel">
+        <div class="panel-heading"><span class="number-badge">01</span><h2 data-i18n="motionSettings">Transformation Settings</h2></div>
+        <div id="motion-controls" class="control-stack"></div>
+      </section>
+      <section class="panel formula-panel">
+        <div class="panel-heading"><span class="number-badge">ƒ</span><h2 data-i18n="formulas">Transformation Formula</h2></div>
+        <div class="formula-name" id="formula-name"></div>
+        <div class="formula-lines" id="formula-lines"></div>
+        <p class="formula-def" id="formula-def"></p>
+        <div class="worked"><strong data-i18n="worked">Worked Example · Vertex A</strong><div class="worked-example" id="worked-example"></div></div>
+      </section>
+      <section class="panel">
+        <div class="panel-heading"><span class="number-badge">02</span><h2 data-i18n="triangle">Original Triangle ABC</h2></div>
+        <div class="coord-titles"><span></span><span>x</span><span>y</span></div>
+        <div id="triangle-inputs"></div>
+        <p class="control-note" data-i18n="editVertexNote">Edit a vertex's coordinates here, or drag its blue handle in the plane. Drag inside the blue triangle to move it without changing its shape.</p>
+      </section>
+      <section class="panel">
+        <div class="panel-heading"><span class="number-badge">✓</span><h2 data-i18n="verification">Check the Invariants</h2></div>
+        <div id="invariant-stats"></div>
+        <div id="invariant-status" class="status"></div>
+      </section>
+    </aside>
+  </main>
+  <footer class="footer"><span data-i18n="footLeft">Rigid transformations preserve distance, angle measures, and area.</span><span data-i18n="footRight">Standalone HTML · Works offline · Mouse or touch</span></footer>
+</div>
+<div id="toast" class="status-toast" role="status" aria-live="polite"></div>
+<dialog id="help-dialog"><h2 id="help-title">How to use this lab</h2><div id="help-content"></div><div class="dialog-end"><button class="btn btn-primary" id="btn-close-help">OK</button></div></dialog>
+<script>
+'use strict';
+(() => {
+const dict = {
+ en: {
+  eyebrow:'INTERACTIVE GEOMETRY LAB', title:'Rigid Motions of a Triangle', subtitle:'Explore translations, reflections, and rotations on the coordinate plane.',
+  help:'How to use', export:'Save image', fullscreen:'Projector view', closeFullscreen:'Exit projector',
+  translate:'Translation', reflect:'Reflection', rotate:'Rotation', snap:'Snap', grid:'Grid', labels:'Labels',reset:'Reset',unit:'1 SQUARE = 1 UNIT',
+  original:'Original',image:'Image',mirrorAxis:'Mirror line',coordinates:'Live Coordinates',updated:'Updates as you drag',vertex:'Vertex',preimage:'Pre-image (x, y)',result:'Image (x′, y′)',
+  motionSettings:'Transformation Settings',formulas:'Transformation Formula',worked:'Worked Example · Vertex A',triangle:'Original Triangle ABC',
+  editVertexNote:'Edit a vertex’s coordinates here, or drag its blue handle in the plane. Drag inside the blue triangle to move it without changing its shape.',
+  verification:'Check the Invariants',footLeft:'Rigid transformations preserve distance, angle measures, and area.',footRight:'Standalone HTML · Works offline · Mouse or touch',
+  shiftX:'Horizontal shift (a)',shiftY:'Vertical shift (b)',vector:'Translation vector', angle:'Rotation angle θ (degrees)',centerX:'Center h',centerY:'Center k',
+  presets:'Quick angles',mirrorSelect:'Reflection across',axisOffset:'Line offset (k)',axisPoints:'Line-defining points',axisPointM:'M',axisPointN:'N',
+  optX:'x-axis (y = 0)',optY:'y-axis (x = 0)',optDiag:'line y = x',optAnti:'line y = −x',optVertical:'vertical line x = k',optHorizontal:'horizontal line y = k',optCustom:'custom line through M and N',
+  shiftHint:'Drag the orange triangle to change the translation vector (a, b).',rotateHint:'Drag the orange triangle around the purple center to change θ. Drag the center to move the pivot.',
+  mirrorHint:'Drag the purple mirror line or its square handles to reposition or rotate it. Drag the orange triangle to shift the source triangle while maintaining its reflection.',
+  translationDrag:'Drag inside a triangle to move it. Drag the orange image to change the translation vector; drag a blue vertex to edit the original triangle.',
+  rotationDrag:'Drag the orange image around the purple pivot to rotate; drag the pivot to change the center. Blue handles edit the original triangle.',
+  reflectionDrag:'Drag the mirror line or its square ends. Drag the orange image to move the original triangle consistently with the reflection.',
+  transformation:'TRANSLATION',reflection:'REFLECTION',rotation:'ROTATION',
+  translationDef:'a = horizontal displacement; b = vertical displacement. Positive values move right and up.',
+  rotationDef:'(h, k) = center of rotation. Positive angles are counterclockwise; negative angles are clockwise.',
+  reflectionDef:'Each point and its image lie the same perpendicular distance from the mirror line.',
+  reflectionCustomDef:'M and N define the mirror line; u is its unit direction and v = P − M.',
+  sides:'Side lengths',signedArea:'Area',orientation:'Orientation',preserved:'Congruent triangles: AB, BC, and CA retain their lengths; angles and area remain unchanged.',
+  sameOrientation:'Preserved',reversed:'Reversed',undefinedOrientation:'Undefined',
+  noteSnap:'Dragging snaps to 0.5 units (rotation: 5°). Uncheck Snap for continuous movement.',
+  pointLabel:'Point', copied:'Coordinates copied',pngSaved:'Image saved',resetDone:'Reset to example',invalidLine:'Mirror points M and N must be different.',
+  helpTitle:'Manipulating rigid motions',
+  helpHtml:'<ol><li><b>Choose</b> Translation, Reflection, or Rotation.</li><li><b>Move the blue triangle</b> by dragging its interior. Its shape stays fixed. Drag a <b>blue vertex handle</b> only when you want to edit the original triangle.</li><li><b>Move the orange image</b>: in Translation, drag it anywhere to set the vector; in Rotation, drag it around the center to set the angle; in Reflection, drag it to move the source consistently with the mirror.</li><li><b>Change the center or mirror line</b> using the purple handles. You can also enter exact numbers in the right panel.</li><li>Enable <b>Snap</b> for 0.5-unit and 5° steps. Use <b>Projector view</b> to enlarge the coordinate plane.</li></ol><p>The purple rotation center and mirror line may be moved independently. A rigid motion never stretches or changes the transformed triangle’s side lengths.</p>',
+  imageFailed:'Could not save the image in this browser.', customInfo:'Select Custom to edit the line through points M and N, or drag the purple handles.',example:'Example',
+ },
+ es: {
+  eyebrow:'LABORATORIO INTERACTIVO DE GEOMETRÍA',title:'Movimientos rígidos de un triángulo',subtitle:'Explora traslaciones, reflexiones y rotaciones en el plano cartesiano.',
+  help:'Cómo utilizar',export:'Guardar imagen',fullscreen:'Vista proyector',closeFullscreen:'Salir de proyección',
+  translate:'Traslación',reflect:'Reflexión',rotate:'Rotación',snap:'Ajustar',grid:'Cuadrícula',labels:'Etiquetas',reset:'Reiniciar',unit:'1 CUADRO = 1 UNIDAD',
+  original:'Original',image:'Imagen',mirrorAxis:'Eje de reflexión',coordinates:'Coordenadas en tiempo real',updated:'Se actualizan al arrastrar',vertex:'Vértice',preimage:'Original (x, y)',result:'Imagen (x′, y′)',
+  motionSettings:'Parámetros del movimiento',formulas:'Fórmula de transformación',worked:'Ejemplo resuelto · Vértice A',triangle:'Triángulo original ABC',
+  editVertexNote:'Edita aquí las coordenadas, o arrastra un vértice azul en el plano. Arrastra dentro del triángulo azul para moverlo sin deformarlo.',
+  verification:'Comprobación de invariantes',footLeft:'Las isometrías conservan distancias, medidas angulares y área.',footRight:'HTML autónomo · Funciona sin internet · Ratón o pantalla táctil',
+  shiftX:'Traslado horizontal (a)',shiftY:'Traslado vertical (b)',vector:'Vector de traslación',angle:'Ángulo de rotación θ (grados)',centerX:'Centro h',centerY:'Centro k',
+  presets:'Ángulos rápidos',mirrorSelect:'Reflexión respecto a',axisOffset:'Desplazamiento del eje (k)',axisPoints:'Puntos que definen el eje',axisPointM:'M',axisPointN:'N',
+  optX:'eje x (y = 0)',optY:'eje y (x = 0)',optDiag:'recta y = x',optAnti:'recta y = −x',optVertical:'recta vertical x = k',optHorizontal:'recta horizontal y = k',optCustom:'recta libre por M y N',
+  shiftHint:'Arrastra el triángulo naranja para modificar el vector (a, b).',rotateHint:'Arrastra el triángulo naranja alrededor del centro violeta para cambiar θ. Arrastra el centro para desplazarlo.',
+  mirrorHint:'Arrastra el eje violeta o sus extremos cuadrados para desplazarlo o girarlo. Arrastra el triángulo naranja para mover el triángulo original conservando su reflexión.',
+  translationDrag:'Arrastra el interior de un triángulo para moverlo. Arrastra la imagen naranja para cambiar el vector; arrastra un vértice azul para editar el triángulo original.',
+  rotationDrag:'Arrastra la imagen naranja alrededor del centro violeta para girarla; arrastra el centro para cambiarlo. Los puntos azules editan el triángulo original.',
+  reflectionDrag:'Arrastra el eje violeta o sus extremos cuadrados. Arrastra la imagen naranja para desplazar el original de manera coherente con la reflexión.',
+  transformation:'TRASLACIÓN',reflection:'REFLEXIÓN',rotation:'ROTACIÓN',
+  translationDef:'a = desplazamiento horizontal; b = desplazamiento vertical. Los valores positivos indican derecha y arriba.',
+  rotationDef:'(h, k) = centro de rotación. Los ángulos positivos giran en sentido antihorario; los negativos, en sentido horario.',
+  reflectionDef:'Cada punto y su imagen están a igual distancia perpendicular del eje de reflexión.',
+  reflectionCustomDef:'M y N definen el eje; u es su vector director unitario y v = P − M.',
+  sides:'Longitud de lados',signedArea:'Área',orientation:'Orientación',preserved:'Triángulos congruentes: AB, BC y CA conservan sus longitudes; los ángulos y el área no cambian.',
+  sameOrientation:'Conservada',reversed:'Invertida',undefinedOrientation:'Indefinida',
+  noteSnap:'Al arrastrar, el ajuste es de 0.5 unidades (rotación: 5°). Desactiva Ajustar para movimiento continuo.',
+  pointLabel:'Punto',copied:'Coordenadas copiadas',pngSaved:'Imagen guardada',resetDone:'Restablecido el ejemplo',invalidLine:'Los puntos M y N del eje deben ser diferentes.',
+  helpTitle:'Cómo manipular los movimientos rígidos',
+  helpHtml:'<ol><li><b>Elige</b> Traslación, Reflexión o Rotación.</li><li><b>Mueve el triángulo azul</b> arrastrando su interior. Su forma se mantiene. Arrastra uno de los <b>vértices azules</b> solamente para modificar la figura inicial.</li><li><b>Mueve la imagen naranja</b>: en Traslación puedes arrastrarla libremente para definir el vector; en Rotación debes arrastrarla alrededor del centro para definir el ángulo; en Reflexión puedes arrastrarla para mover de manera correspondiente el triángulo de origen.</li><li><b>Cambia el centro o el eje</b> con las marcas violetas, o escribe coordenadas exactas en el panel derecho.</li><li>Activa <b>Ajustar</b> para usar pasos de 0.5 unidades y 5°. Usa <b>Vista proyector</b> para ampliar el plano cartesiano.</li></ol><p>El centro de rotación y el eje de reflexión se pueden mover independientemente. Una isometría nunca estira ni modifica las longitudes de la imagen.</p>',
+  imageFailed:'No fue posible guardar la imagen en este navegador.',customInfo:'Selecciona Eje libre para editar los puntos M y N, o arrastra las marcas violetas.',example:'Ejemplo',
+ }
+};
+const $=s=>document.querySelector(s);
+const $$=s=>Array.from(document.querySelectorAll(s));
+const t=k=>dict[state.lang][k]||k;
+const initial=()=>({lang:'en',mode:'translate',verts:[{x:-5,y:-1},{x:-2,y:-1},{x:-4,y:2}],tx:5,ty:3,angle:90,cx:0,cy:0,preset:'x0',axisK:2,M:{x:-4,y:0},N:{x:4,y:0},snap:true,grid:true,labels:true});
+let state=initial(), drag=null, toastTimeout=null;
+const W=960,H=650,cx=480,cy=325,scale=39;
+const px=p=>({x:cx+p.x*scale,y:cy-p.y*scale});
+const num=n=>{ if(!Number.isFinite(n))return '—'; const a=Math.abs(n)<0.004999?0:Math.round(n*100)/100; return String(a).replace('-', '−'); };
+const inputNum=n=>{ const v=Math.abs(n)<1e-9?0:Math.round(n*10000)/10000; return String(v); };
+const fpoint=p=>`(${num(p.x)}, ${num(p.y)})`;
+const clone=p=>({x:p.x,y:p.y});
+const snap=(v,step=0.5)=>Math.round(v/step)*step;
+const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+const area=v=>((v[1].x-v[0].x)*(v[2].y-v[0].y)-(v[1].y-v[0].y)*(v[2].x-v[0].x))/2;
+const centroid=v=>({x:v.reduce((s,p)=>s+p.x,0)/3,y:v.reduce((s,p)=>s+p.y,0)/3});
+const rad=a=>a*Math.PI/180;
+function syncAxisFromPreset(){
+ const k=state.axisK;
+ const lines={x0:[[-4,0],[4,0]],y0:[[0,-4],[0,4]],diag:[[-4,-4],[4,4]],anti:[[-4,4],[4,-4]],vertical:[[k,-4],[k,4]],horizontal:[[-4,k],[4,k]]};
+ if(lines[state.preset]) {const [m,n]=lines[state.preset]; state.M={x:m[0],y:m[1]};state.N={x:n[0],y:n[1]};}
+}
+function reflectVector(v){
+ const dx=state.N.x-state.M.x,dy=state.N.y-state.M.y,den=dx*dx+dy*dy||1;
+ const factor=2*(v.x*dx+v.y*dy)/den;
+ return {x:factor*dx-v.x,y:factor*dy-v.y};
+}
+function transform(p){
+ if(state.mode==='translate')return {x:p.x+state.tx,y:p.y+state.ty};
+ if(state.mode==='rotate') {const c=Math.cos(rad(state.angle)),s=Math.sin(rad(state.angle)),x=p.x-state.cx,y=p.y-state.cy; return {x:state.cx+x*c-y*s,y:state.cy+x*s+y*c};}
+ const v={x:p.x-state.M.x,y:p.y-state.M.y};const r=reflectVector(v);return {x:state.M.x+r.x,y:state.M.y+r.y};
+}
+const getImages=()=>state.verts.map(transform);
+const lineEl=(a,b,attrs='')=>`<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" ${attrs}/>`;
+const lineWorld=(a,b,attrs='')=>lineEl(px(a),px(b),attrs);
+const textEl=(x,y,label,opts='')=>`<text x="${x}" y="${y}" ${opts}>${label}</text>`;
+function drawGrid(){
+ const g=$('#grid-layer'); let s='<rect x="0" y="0" width="960" height="650" fill="#f9fbff"/>';
+ if(state.grid){
+  for(let i=-11;i<=11;i++){const x=cx+i*scale;s+=`<line x1="${x}" x2="${x}" y1="32" y2="618" stroke="${i===0?'#8194b0':'#e2eaf5'}" stroke-width="${i===0?2.2:1}"/>`;}
+  for(let i=-7;i<=7;i++){const y=cy-i*scale;s+=`<line x1="38" x2="922" y1="${y}" y2="${y}" stroke="${i===0?'#8194b0':'#e2eaf5'}" stroke-width="${i===0?2.2:1}"/>`;}
+ } else {
+  s+=`<line x1="38" y1="${cy}" x2="922" y2="${cy}" stroke="#8194b0" stroke-width="2.2"/>`;
+  s+=`<line x1="${cx}" y1="32" x2="${cx}" y2="618" stroke="#8194b0" stroke-width="2.2"/>`;
+ }
+ s+=`<path d="M915 ${cy-5}L927 ${cy}L915 ${cy+5}" fill="none" stroke="#637b9d" stroke-width="2"/>`;
+ s+=`<path d="M${cx-5} 39L${cx} 27L${cx+5} 39" fill="none" stroke="#637b9d" stroke-width="2"/>`;
+ for(let i=-10;i<=10;i+=2){if(i===0)continue;const x=cx+i*scale;s+=textEl(x,cy+23,num(i),'font-size="15" fill="#8796ab" text-anchor="middle" font-weight="650" font-family="Arial,sans-serif"');}
+ for(let i=-6;i<=6;i+=2){if(i===0)continue;const y=cy-i*scale;s+=textEl(cx-13,y+5,num(i),'font-size="15" fill="#8796ab" text-anchor="end" font-weight="650" font-family="Arial,sans-serif"');}
+ s+=textEl(cx-12,cy+23,'0','font-size="15" fill="#8796ab" text-anchor="end" font-family="Arial,sans-serif"');
+ s+=textEl(930,cy-12,'x','font-size="22" fill="#46688f" text-anchor="middle" font-style="italic" font-family="Georgia,serif"');
+ s+=textEl(cx+16,24,'y','font-size="22" fill="#46688f" text-anchor="middle" font-style="italic" font-family="Georgia,serif"');
+ g.innerHTML=s;
+}
+function guideMarkup(original,im){
+ let s='';
+ const origC=centroid(original),imC=centroid(im);
+ if(state.mode==='translate'){
+  if(dist(origC,imC)>.1) {
+   s+=lineWorld(origC,imC,'stroke="#e97821" stroke-width="3" stroke-dasharray="7 6" marker-end="url(#arrow-orange)" opacity="0.85"');
+   const mid=px({x:(origC.x+imC.x)/2,y:(origC.y+imC.y)/2});s+=textEl(mid.x+9,mid.y-10,'v','font-size="21" fill="#c66d15" font-style="italic" font-family="Georgia,serif"');
+  }
+ }
+ if(state.mode==='rotate'){
+  const pivot={x:state.cx,y:state.cy},P=px(pivot),r=dist(pivot,origC)*scale;
+  if(r>4&&Math.abs(state.angle%360)>0.05){
+   let delta=rad(state.angle%360);const dir=delta>=0?0:1; const large=Math.abs(delta)>Math.PI?1:0;
+   const angle0=Math.atan2(origC.y-pivot.y,origC.x-pivot.x);
+   const arcP0=px({x:pivot.x+Math.cos(angle0)*r/scale,y:pivot.y+Math.sin(angle0)*r/scale});
+   const arcP1=px({x:pivot.x+Math.cos(angle0+delta)*r/scale,y:pivot.y+Math.sin(angle0+delta)*r/scale});
+   s+=`<path d="M ${arcP0.x} ${arcP0.y} A ${r} ${r} 0 ${large} ${dir} ${arcP1.x} ${arcP1.y}" fill="none" stroke="#8053cc" stroke-width="2.5" stroke-dasharray="7 5" marker-end="url(#arrow-purple)" opacity=".8"/>`;
+  }
+  s+=`<circle cx="${P.x}" cy="${P.y}" r="22" fill="#8053cc" opacity=".07"/>`;
+  s+=`<circle cx="${P.x}" cy="${P.y}" r="9" fill="#fff" stroke="#8053cc" stroke-width="3.5" class="handle" data-drag="pivot"/>`;
+  s+=`<line x1="${P.x-16}" y1="${P.y}" x2="${P.x+16}" y2="${P.y}" stroke="#8053cc" stroke-width="1.6" pointer-events="none"/>`;
+  s+=`<line x1="${P.x}" y1="${P.y-16}" x2="${P.x}" y2="${P.y+16}" stroke="#8053cc" stroke-width="1.6" pointer-events="none"/>`;
+  if(state.labels)s+=textEl(P.x+15,P.y-16,'O','font-size="17" font-weight="800" fill="#8053cc" font-family="Arial,sans-serif" pointer-events="none"');
+ }
+ if(state.mode==='reflect'){
+  const d={x:state.N.x-state.M.x,y:state.N.y-state.M.y};
+  const p1=px({x:state.M.x-100*d.x,y:state.M.y-100*d.y}),p2=px({x:state.M.x+100*d.x,y:state.M.y+100*d.y});
+  s+=lineEl(p1,p2,'stroke="#8053cc" stroke-width="4" stroke-dasharray="13 7" opacity=".8" pointer-events="none"');
+  s+=lineEl(p1,p2,'stroke="transparent" stroke-width="19" class="axis-hit" data-drag="axis"');
+  if(dist(origC,imC)>.08)s+=lineWorld(origC,imC,'stroke="#8053cc" stroke-width="2.5" stroke-dasharray="4 5" opacity=".7" pointer-events="none"');
+  for(const [k,p] of [['M',state.M],['N',state.N]]){
+   const q=px(p);
+   s+=`<rect x="${q.x-9}" y="${q.y-9}" width="18" height="18" rx="4" fill="#fff" stroke="#8053cc" stroke-width="3.2" class="handle" data-drag="axis-${k}"/>`;
+   if(state.labels)s+=textEl(q.x+13,q.y-15,k,'font-size="16" font-weight="800" fill="#8053cc" font-family="Arial,sans-serif" pointer-events="none"');
+  }
+  const m=px(state.M);if(state.labels)s+=textEl(m.x+11,m.y+28,'ℓ','font-size="19" font-weight="800" fill="#8053cc" font-family="Georgia,serif" pointer-events="none"');
+ }
+ return s;
+}
+function polyMarkup(points,kind){
+ const original=kind==='original';const color=original?'#2563eb':'#e97821';const fill=original?'#2563eb':'#f49d45';const title=original?'Original triangle':'Transformed triangle';
+ const coords=points.map(p=>{let q=px(p);return `${q.x},${q.y}`}).join(' ');
+ let s=`<polygon points="${coords}" fill="${fill}" fill-opacity=".20" stroke="${color}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" class="shape-${kind}" data-drag="${original?'original':'image'}" aria-label="${title}"/>`;
+ for(let i=0;i<points.length;i++){
+  const q=px(points[i]),dr=original?`vertex-${i}`:'image',label='ABC'[i]+(original?'':'′');
+  s+=`<circle cx="${q.x}" cy="${q.y}" r="${original?9:8}" fill="#fff" stroke="${color}" stroke-width="4" class="handle" data-drag="${dr}"/>`;
+  s+=`<circle cx="${q.x}" cy="${q.y}" r="${original?3:3.5}" fill="${color}" pointer-events="none"/>`;
+  if(state.labels){const offset=[[-20,-14],[13,-14],[-9,-17]][i];
+   s+=textEl(q.x+offset[0],q.y+offset[1],label,`font-family="Arial,sans-serif" font-size="21" fill="${color}" font-weight="850" paint-order="stroke" stroke="#f9fbff" stroke-width="5" stroke-linejoin="round" pointer-events="none"`);
+  }
+ }
+ return s;
+}
+function drawScene(){
+ drawGrid();const im=getImages();let guides=guideMarkup(state.verts,im);
+ // Make triangle edges visually legible and keep the orange image in the foreground.
+ $('#guide-layer').innerHTML=guides;
+ $('#figure-layer').innerHTML=polyMarkup(state.verts,'original')+polyMarkup(im,'image');
+ // Rotation and mirror handles are above the shapes, so they remain easy to grab.
+ if(state.mode==='rotate'||state.mode==='reflect') {
+  const layer=$('#guide-layer'); const front=layer.querySelectorAll('[data-drag="pivot"],[data-drag="axis-M"],[data-drag="axis-N"]');
+  for(const node of front) { const copied=node.cloneNode(true);$('#figure-layer').appendChild(copied); }
+ }
+ $('#mirror-key').hidden=state.mode!=='reflect';
+}
+function formulaData(){
+ const p=state.verts[0],q=transform(p);
+ if(state.mode==='translate')return {
+  name:t('transformation'), lines:['x′ = x + a','y′ = y + b','v⃗ = (a, b)'],def:t('translationDef'),
+  worked:`A${fpoint(p)} → A′${fpoint(q)}<br>x′ = ${num(p.x)} + (${num(state.tx)}) = ${num(q.x)}<br>y′ = ${num(p.y)} + (${num(state.ty)}) = ${num(q.y)}`
+ };
+ if(state.mode==='rotate'){
+  const x=p.x-state.cx,y=p.y-state.cy;
+  return {name:t('rotation'),lines:['x′ = h + (x − h)cos θ − (y − k)sin θ','y′ = k + (x − h)sin θ + (y − k)cos θ'],
+   def:`θ = ${num(state.angle)}°; O = (${num(state.cx)}, ${num(state.cy)}). ${t('rotationDef')}`,
+   worked:`A${fpoint(p)} → A′${fpoint(q)}<br>x′ = ${num(state.cx)} + (${num(x)})cos(${num(state.angle)}°) − (${num(y)})sin(${num(state.angle)}°) = ${num(q.x)}<br>y′ = ${num(state.cy)} + (${num(x)})sin(${num(state.angle)}°) + (${num(y)})cos(${num(state.angle)}°) = ${num(q.y)}`};
+ }
+ let lines,descr=t('reflectionDef');
+ if(state.preset==='x0')lines=['x′ = x','y′ = −y'];
+ else if(state.preset==='y0')lines=['x′ = −x','y′ = y'];
+ else if(state.preset==='diag')lines=['x′ = y','y′ = x'];
+ else if(state.preset==='anti')lines=['x′ = −y','y′ = −x'];
+ else if(state.preset==='vertical')lines=['x′ = 2k − x','y′ = y'];
+ else if(state.preset==='horizontal')lines=['x′ = x','y′ = 2k − y'];
+ else {lines=['u = (N − M) / |N − M|','v = P − M','P′ = M + 2(v · u)u − v'];descr=t('reflectionCustomDef');}
+ if(['horizontal','vertical'].includes(state.preset))descr=`k = ${num(state.axisK)}. ${descr}`;
+ return {name:t('reflection'),lines,def:descr,worked:`A${fpoint(p)} → A′${fpoint(q)}<br> x′ = ${num(q.x)}; &nbsp; y′ = ${num(q.y)}<br> M${fpoint(state.M)}; N${fpoint(state.N)}`};
+}
+function renderReadouts(){
+ const im=getImages();
+ $('#coord-table').innerHTML=state.verts.map((v,i)=>`<tr><td>${'ABC'[i]}</td><td>${fpoint(v)}</td><td>${fpoint(im[i])}</td></tr>`).join('');
+ const formula=formulaData();
+ $('#formula-name').textContent=formula.name;
+ $('#formula-lines').innerHTML=formula.lines.map(line=>`<div>${line}</div>`).join('');
+ $('#formula-def').textContent=formula.def;
+ $('#worked-example').innerHTML=formula.worked;
+ const a=state.verts; const ab=dist(a[0],a[1]),bc=dist(a[1],a[2]),ca=dist(a[2],a[0]);
+ const imgAb=dist(im[0],im[1]),origArea=Math.abs(area(a)),imgArea=Math.abs(area(im));
+ const orientation=origArea<.000001?t('undefinedOrientation'):(area(a)*area(im)<0?t('reversed'):t('sameOrientation'));
+ $('#invariant-stats').innerHTML=`<table><thead><tr><th>${t('sides')}</th><th>ABC</th><th>A′B′C′</th></tr></thead><tbody><tr><td>AB</td><td>${num(ab)}</td><td>${num(imgAb)}</td></tr><tr><td>BC</td><td>${num(bc)}</td><td>${num(dist(im[1],im[2]))}</td></tr><tr><td>CA</td><td>${num(ca)}</td><td>${num(dist(im[2],im[0]))}</td></tr></tbody></table><div class="fact-row"><div class="fact"><span>${t('signedArea')}</span><b>${num(origArea)} <small>= ${num(imgArea)}</small></b></div><div class="fact"><span>${t('orientation')}</span><b style="font-size:13px">${orientation}</b></div></div>`;
+ $('#invariant-status').innerHTML=`<span class="check">✓</span><span>${t('preserved')}</span>`;
+ $('#drag-instructions').textContent=t(state.mode==='translate'?'translationDrag':state.mode==='rotate'?'rotationDrag':'reflectionDrag');
+}
+function fieldHtml(label,key,value,step='0.5') {
+ return `<label class="field"><span>${label}</span><input type="number" inputmode="decimal" step="${step}" data-param="${key}" value="${inputNum(value)}"></label>`;
+}
+function sliderHtml(key,value,min,max,step='1'){
+ return `<input type="range" aria-label="${key}" data-range="${key}" min="${min}" max="${max}" step="${step}" value="${Math.max(min,Math.min(max,value))}">`;
+}
+function renderModeUI(){
+ let s='';
+ if(state.mode==='translate'){
+  s+=`<div class="fields-2">${fieldHtml(t('shiftX'),'tx',state.tx)}${fieldHtml(t('shiftY'),'ty',state.ty)}</div>`;
+  s+=`<div class="field">${sliderHtml('tx',state.tx,-10,10,'0.5')}</div><div class="field">${sliderHtml('ty',state.ty,-8,8,'0.5')}</div>`;
+  s+=`<p class="control-note">${t('shiftHint')}</p>`;
+ }else if(state.mode==='rotate'){
+  s+=fieldHtml(t('angle'),'angle',state.angle,'1');
+  s+=sliderHtml('angle',state.angle,-360,360,'5');
+  s+=`<div class="presets"><button class="preset" data-angle="90">+90° ↶</button><button class="preset" data-angle="-90">−90° ↷</button><button class="preset" data-angle="100">+100°</button><button class="preset" data-angle="180">180°</button></div>`;
+  s+=`<div class="separator"></div><div class="fields-2">${fieldHtml(t('centerX'),'cx',state.cx)}${fieldHtml(t('centerY'),'cy',state.cy)}</div>`;
+  s+=`<p class="control-note">${t('rotateHint')}</p>`;
+ }else{
+  const opts=[['x0','optX'],['y0','optY'],['diag','optDiag'],['anti','optAnti'],['vertical','optVertical'],['horizontal','optHorizontal'],['custom','optCustom']];
+  s+=`<label class="field"><span>${t('mirrorSelect')}</span><select id="reflection-preset">${opts.map(([k,l])=>`<option value="${k}" ${k===state.preset?'selected':''}>${t(l)}</option>`).join('')}</select></label>`;
+  if(['vertical','horizontal'].includes(state.preset))s+=fieldHtml(t('axisOffset'),'axisK',state.axisK);
+  if(state.preset==='custom'){
+   s+=`<div><div class="control-note" style="margin:0 0 7px;font-weight:750">${t('axisPoints')}</div><div class="fields-4">${fieldHtml('M.x','Mx',state.M.x)}${fieldHtml('M.y','My',state.M.y)}${fieldHtml('N.x','Nx',state.N.x)}${fieldHtml('N.y','Ny',state.N.y)}</div></div>`;
+  }
+  s+=`<p class="control-note">${t('mirrorHint')}</p>`;
+ }
+ s+=`<p class="control-note" style="padding-top:7px;border-top:1px solid #edf1f6">${t('noteSnap')}</p>`;
+ $('#motion-controls').innerHTML=s;
+}
+function renderTriangleUI(){
+ $('#triangle-inputs').innerHTML=state.verts.map((v,i)=>`<div class="coord-edit"><label>${'ABC'[i]}</label><input type="number" step="0.5" data-vertex="${i}" data-axis="x" aria-label="${'ABC'[i]}.x" value="${inputNum(v.x)}"><input type="number" step="0.5" data-vertex="${i}" data-axis="y" aria-label="${'ABC'[i]}.y" value="${inputNum(v.y)}"></div>`).join('');
+}
+function syncInputs(){
+ $$('#motion-controls [data-param]').forEach(el=>{if(document.activeElement===el)return;el.value=inputNum(getVal(el.dataset.param));});
+ $$('#motion-controls [data-range]').forEach(el=>{const val=getVal(el.dataset.range);el.value=Math.min(Number(el.max),Math.max(Number(el.min),val));});
+ $$('#triangle-inputs [data-vertex]').forEach(el=>{if(document.activeElement===el)return;el.value=inputNum(state.verts[Number(el.dataset.vertex)][el.dataset.axis]);});
+}
+function getVal(k){if(k==='Mx')return state.M.x;if(k==='My')return state.M.y;if(k==='Nx')return state.N.x;if(k==='Ny')return state.N.y;return state[k];}
+function setVal(k,v){
+ if(!Number.isFinite(v))return false;
+ if(['Mx','My','Nx','Ny'].includes(k)){
+  const p=k[0]==='M'?'M':'N',c=k[1].toLowerCase();
+  const point={...state[p],[c]:v},opposite=state[p==='M'?'N':'M'];
+  if(dist(point,opposite)<.05){showToast(t('invalidLine'));return false;}
+  state[p]=point;state.preset='custom';return true;
+ }
+ state[k]=v;if(k==='axisK')syncAxisFromPreset();return true;
+}
+function update(){drawScene();renderReadouts();syncInputs();}
+function changeMode(mode){state.mode=mode;$$('[data-mode]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode===mode)));renderModeUI();update();}
+function translateStatic(){
+ document.documentElement.lang=state.lang;
+ $$('[data-i18n]').forEach(el=>{el.textContent=t(el.dataset.i18n);});
+ $('#lang-label').textContent=state.lang==='en'?'ESPAÑOL':'ENGLISH';
+ $('#btn-fullscreen span').textContent=t(document.fullscreenElement?'closeFullscreen':'fullscreen');
+ $('#help-title').textContent=t('helpTitle');$('#help-content').innerHTML=t('helpHtml');
+ document.title=t('title')+' | Geometry Lab';
+}
+function renderAll(){translateStatic();renderTriangleUI();renderModeUI();changeMode(state.mode);}
+function showToast(s){const el=$('#toast');el.textContent=s;el.classList.add('show');clearTimeout(toastTimeout);toastTimeout=setTimeout(()=>el.classList.remove('show'),2600);}
+function pointerWorld(e){const point=$('#plane').createSVGPoint();point.x=e.clientX;point.y=e.clientY;const m=$('#plane').getScreenCTM();if(!m)return {x:0,y:0};const z=point.matrixTransform(m.inverse());return {x:(z.x-cx)/scale,y:(cy-z.y)/scale};}
+const wrapRadians=a=>Math.atan2(Math.sin(a),Math.cos(a));
+function startDrag(e){
+ if(e.button!==undefined && e.button!==0)return;
+ const node=e.target.closest('[data-drag]');if(!node)return;
+ const type=node.dataset.drag,p=pointerWorld(e);
+ drag={type,start:p,origin:state.verts.map(clone),oldTx:state.tx,oldTy:state.ty,oldAngle:state.angle,angleRaw:state.angle,oldCx:state.cx,oldCy:state.cy,oldM:clone(state.M),oldN:clone(state.N)};
+ if(type==='image'&&state.mode==='rotate')drag.lastPolar=Math.atan2(p.y-state.cy,p.x-state.cx);
+ $('#plane').setPointerCapture(e.pointerId);$('#plane').classList.add('dragging');e.preventDefault();
+}
+function moveDrag(e){
+ if(!drag)return;
+ const p=pointerWorld(e),dx=p.x-drag.start.x,dy=p.y-drag.start.y;
+ const mX=state.snap?snap(dx):dx,mY=state.snap?snap(dy):dy;
+ if(drag.type==='original')state.verts=drag.origin.map(v=>({x:v.x+mX,y:v.y+mY}));
+ else if(drag.type.startsWith('vertex-')){
+  const i=Number(drag.type.split('-')[1]);state.verts[i]={x:state.snap?snap(p.x):p.x,y:state.snap?snap(p.y):p.y};
+ }else if(drag.type==='image'){
+  if(state.mode==='translate') {state.tx=drag.oldTx+mX;state.ty=drag.oldTy+mY;}
+  else if(state.mode==='rotate'){
+   const current=Math.atan2(p.y-state.cy,p.x-state.cx);
+   const delta=wrapRadians(current-drag.lastPolar);
+   drag.angleRaw+=delta*180/Math.PI;drag.lastPolar=current;
+   state.angle=state.snap?snap(drag.angleRaw,5):Math.round(drag.angleRaw*10)/10;
+  }else{
+   const v=reflectVector({x:mX,y:mY});state.verts=drag.origin.map(pt=>({x:pt.x+v.x,y:pt.y+v.y}));
+  }
+ }else if(drag.type==='pivot') {state.cx=state.snap?snap(p.x):p.x;state.cy=state.snap?snap(p.y):p.y;}
+ else if(drag.type==='axis'){
+  state.preset='custom';state.M={x:drag.oldM.x+mX,y:drag.oldM.y+mY};state.N={x:drag.oldN.x+mX,y:drag.oldN.y+mY};
+ }else if(drag.type==='axis-M'||drag.type==='axis-N'){
+  const target=drag.type.endsWith('M')?'M':'N',other=target==='M'?'N':'M',next={x:state.snap?snap(p.x):p.x,y:state.snap?snap(p.y):p.y};
+  if(dist(next,state[other])>.12){state[target]=next;state.preset='custom';}
+ }
+ update();e.preventDefault();
+}
+function finishDrag(e){
+ if(!drag)return;
+ drag=null;$('#plane').classList.remove('dragging');
+ if(e&&$('#plane').hasPointerCapture(e.pointerId))$('#plane').releasePointerCapture(e.pointerId);
+ renderModeUI();syncInputs();
+}
+$('#plane').addEventListener('pointerdown',startDrag);
+$('#plane').addEventListener('pointermove',moveDrag);
+$('#plane').addEventListener('pointerup',finishDrag);
+$('#plane').addEventListener('pointercancel',finishDrag);
+$('#plane').addEventListener('lostpointercapture',()=>{drag=null;$('#plane').classList.remove('dragging');});
+$$('[data-mode]').forEach(b=>b.addEventListener('click',()=>changeMode(b.dataset.mode)));
+$('#motion-controls').addEventListener('change',e=>{
+ const sel=e.target;
+ if(sel.id==='reflection-preset'){
+  state.preset=sel.value;syncAxisFromPreset();renderModeUI();update();return;
+ }
+ if(sel.dataset.param){const k=sel.dataset.param,v=Number(sel.value);if(sel.value.trim()===''||!Number.isFinite(v)){syncInputs();return;}if(!setVal(k,v)){sel.value=inputNum(getVal(k));return;}update();}
+});
+$('#motion-controls').addEventListener('input',e=>{
+ const el=e.target;
+ if(el.dataset.range){const v=Number(el.value);setVal(el.dataset.range,v);update();}
+});
+$('#motion-controls').addEventListener('click',e=>{
+ const el=e.target.closest('[data-angle]');if(el){state.angle=Number(el.dataset.angle);update();}
+});
+$('#triangle-inputs').addEventListener('change',e=>{
+ const el=e.target;if(!el.matches('[data-vertex]'))return;
+ const v=Number(el.value);if(el.value.trim()===''||!Number.isFinite(v)){syncInputs();return;}
+ state.verts[Number(el.dataset.vertex)][el.dataset.axis]=v;update();
+});
+$('#btn-language').addEventListener('click',()=>{state.lang=state.lang==='en'?'es':'en';renderAll();});
+$('#snap-toggle').addEventListener('change',e=>{state.snap=e.target.checked;});
+$('#grid-toggle').addEventListener('change',e=>{state.grid=e.target.checked;update();});
+$('#labels-toggle').addEventListener('change',e=>{state.labels=e.target.checked;update();});
+$('#btn-reset').addEventListener('click',()=>{const lang=state.lang,mode=state.mode;state=initial();state.lang=lang;state.mode=mode;$('#snap-toggle').checked=true;$('#grid-toggle').checked=true;$('#labels-toggle').checked=true;renderAll();showToast(t('resetDone'));});
+$('#btn-help').addEventListener('click',()=>$('#help-dialog').showModal());
+$('#btn-close-help').addEventListener('click',()=>$('#help-dialog').close());
+$('#btn-fullscreen').addEventListener('click',async()=>{
+ try{if(document.fullscreenElement)await document.exitFullscreen();else await $('#stage-card').requestFullscreen();}
+ catch(err){showToast('Fullscreen unavailable / Pantalla completa no disponible');}
+});
+document.addEventListener('fullscreenchange',()=>$('#btn-fullscreen span').textContent=t(document.fullscreenElement?'closeFullscreen':'fullscreen'));
+$('#btn-export').addEventListener('click',async()=>{
+ try{
+  const svg=$('#plane').cloneNode(true);svg.setAttribute('width','1920');svg.setAttribute('height','1300');
+  const data=new XMLSerializer().serializeToString(svg);const blob=new Blob([data],{type:'image/svg+xml;charset=utf-8'});
+  const url=URL.createObjectURL(blob);const img=new Image();
+  img.onload=()=>{
+   const canvas=document.createElement('canvas');canvas.width=1920;canvas.height=1300;
+   const ctx=canvas.getContext('2d');ctx.fillStyle='#f9fbff';ctx.fillRect(0,0,1920,1300);ctx.drawImage(img,0,0,1920,1300);
+   URL.revokeObjectURL(url);canvas.toBlob(b=>{if(!b)return showToast(t('imageFailed'));const out=URL.createObjectURL(b);const a=document.createElement('a');a.href=out;a.download='triangle-rigid-motion-'+state.mode+'.png';a.click();setTimeout(()=>URL.revokeObjectURL(out),5000);showToast(t('pngSaved'));},'image/png');
+  };
+  img.onerror=()=>{URL.revokeObjectURL(url);showToast(t('imageFailed'));};img.src=url;
+ }catch(err){showToast(t('imageFailed'));}
+});
+renderAll();
+})();
+</script>
+</body>
+</html>
